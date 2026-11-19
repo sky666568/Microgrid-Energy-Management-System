@@ -1,0 +1,2784 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b3127">
+  <meta name="description" content="微电网能源管理系统界面：9.4 微电网通信组网，覆盖资源、互动、管理三类通信数据，以及就地控制层、监控层、能量管理层三层架构与六项核心功能。">
+  <meta name="author" content="孙元凯">
+  <title>微电网能源管理系统 · 9.4 通信组网</title>
+  <style>
+    :root {
+      --bg: #eef4ef;
+      --bg-warm: #f7f3e9;
+      --surface: #ffffff;
+      --surface-soft: #f7faf7;
+      --surface-mint: #edf7f0;
+      --ink: #15332b;
+      --ink-soft: #33544a;
+      --muted: #748a82;
+      --faint: #9aaca5;
+      --line: #dce8df;
+      --line-strong: #c9dacf;
+      --green-950: #071f19;
+      --green-900: #0a2c23;
+      --green-800: #0d3a2e;
+      --green-700: #105442;
+      --green-600: #147259;
+      --green-500: #209f77;
+      --green-400: #3bb98d;
+      --green-100: #e2f3e9;
+      --lime: #b7dd76;
+      --lime-soft: #e8f5c9;
+      --blue: #3a86c7;
+      --blue-soft: #e8f1fa;
+      --amber: #d99835;
+      --amber-soft: #fbf1df;
+      --red: #d25c5c;
+      --violet: #7d78be;
+      --shadow: 0 18px 44px rgba(24, 66, 52, .065);
+      --shadow-strong: 0 24px 60px rgba(12, 48, 37, .14);
+      --radius-xl: 22px;
+      --radius-lg: 17px;
+      --radius-md: 12px;
+      --mono: "Cascadia Code", "SFMono-Regular", "Consolas", monospace;
+      --sans: "Bahnschrift", "HarmonyOS Sans SC", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 55% 42% at 92% 0%, rgba(180, 218, 172, .25), transparent 64%),
+        radial-gradient(ellipse 45% 40% at 38% 100%, rgba(47, 140, 110, .08), transparent 70%),
+        var(--bg);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.56;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      background-image: radial-gradient(rgba(26, 96, 75, .13) .6px, transparent .6px);
+      background-size: 22px 22px;
+      opacity: .23;
+      mask-image: linear-gradient(135deg, #000, transparent 56%);
+    }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    a { color: inherit; text-decoration: none; }
+    button, [role="button"] { -webkit-tap-highlight-color: transparent; }
+    ::selection { background: rgba(183, 221, 118, .55); color: var(--green-950); }
+    .icon { width: 20px; height: 20px; display: block; flex: 0 0 auto; }
+    .icon-sm { width: 15px; height: 15px; }
+    .icon-lg { width: 24px; height: 24px; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+
+    /* ============================================================
+       Sidebar
+       ============================================================ */
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 50;
+      width: 260px;
+      display: flex;
+      flex-direction: column;
+      padding: 26px 17px 18px;
+      color: #eaf6ef;
+      background:
+        radial-gradient(ellipse 120% 55% at -10% 0%, rgba(107, 170, 102, .22), transparent 60%),
+        radial-gradient(ellipse 80% 45% at 100% 92%, rgba(183, 221, 118, .11), transparent 65%),
+        linear-gradient(168deg, #0c3228 0%, #08251e 60%, #071f19 100%);
+      border-right: 1px solid rgba(255, 255, 255, .05);
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+    .sidebar::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .12;
+      background-image:
+        linear-gradient(rgba(195, 244, 218, .22) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(195, 244, 218, .22) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(180deg, #000, transparent 72%);
+    }
+    .brand {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 1px 8px 0;
+    }
+    .brand-mark {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid rgba(211, 244, 212, .22);
+      background: linear-gradient(145deg, rgba(183, 221, 118, .2), rgba(31, 145, 111, .06));
+      color: var(--lime);
+      box-shadow: inset 0 1px rgba(255, 255, 255, .09), 0 8px 20px rgba(0, 0, 0, .14);
+    }
+    .brand-mark svg { width: 27px; height: 27px; }
+    .brand-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .brand-copy strong {
+      color: #f3fbf2;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: .11em;
+      white-space: nowrap;
+    }
+    .brand-copy strong b { color: var(--lime); font-weight: 600; }
+    .brand-copy small {
+      color: #86a999;
+      font-size: 10px;
+      letter-spacing: .04em;
+      white-space: nowrap;
+    }
+    .site-switcher {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      margin-top: 25px;
+      padding: 11px 11px;
+      border: 1px solid rgba(214, 241, 220, .12);
+      border-radius: 11px;
+      background: rgba(255, 255, 255, .055);
+      color: #d8ebdd;
+      cursor: pointer;
+      text-align: left;
+      transition: .2s;
+    }
+    .site-switcher:hover { background: rgba(255, 255, 255, .085); border-color: rgba(183, 221, 118, .28); }
+    .site-switcher .site-symbol {
+      display: grid;
+      place-items: center;
+      width: 31px;
+      height: 31px;
+      border-radius: 8px;
+      background: rgba(183, 221, 118, .12);
+      color: var(--lime);
+    }
+    .site-copy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+    .site-copy b { font-size: 11.5px; font-weight: 500; color: #dceddf; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .site-copy small { font-size: 9px; color: #789789; font-family: var(--mono); }
+    .site-switcher > .icon { margin-left: auto; color: #789789; }
+    .side-nav {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-top: 29px;
+    }
+    .nav-eyebrow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 17px 9px 7px;
+      color: #698d7d;
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+    .nav-eyebrow:first-child { margin-top: 0; }
+    .nav-eyebrow b { color: #547669; font-weight: 400; }
+    .side-link {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 41px;
+      padding: 8px 10px;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      color: #a6beb0;
+      font-size: 12.5px;
+      transition: .2s;
+    }
+    .side-link .icon { color: #7e9d8b; width: 17px; height: 17px; }
+    .side-link span { white-space: nowrap; }
+    .side-link .nav-count {
+      min-width: 19px;
+      height: 18px;
+      margin-left: auto;
+      padding: 0 5px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(183, 221, 118, .14);
+      border-radius: 5px;
+      color: #759789;
+      font-family: var(--mono);
+      font-size: 8.5px;
+    }
+    .side-link:hover { color: #e7f7e8; background: rgba(255, 255, 255, .045); }
+    .side-link.is-active {
+      color: #f4fbf0;
+      border-color: rgba(183, 221, 118, .18);
+      background: linear-gradient(90deg, rgba(183, 221, 118, .14), rgba(255, 255, 255, .025));
+      box-shadow: inset 2px 0 0 var(--lime);
+    }
+    .side-link.is-active .icon { color: var(--lime); }
+    .side-link.is-active .nav-count { color: var(--lime); border-color: rgba(183, 221, 118, .28); }
+    .sidebar-bottom {
+      margin-top: auto;
+      padding-top: 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .gateway-card {
+      padding: 12px 12px 10px;
+      border: 1px solid rgba(214, 241, 220, .1);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .035);
+    }
+    .gateway-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #91ab99;
+      font-size: 9.5px;
+      letter-spacing: .03em;
+    }
+    .online-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--lime);
+      box-shadow: 0 0 0 3px rgba(183, 221, 118, .08), 0 0 9px rgba(183, 221, 118, .55);
+      animation: softPulse 2.4s infinite;
+    }
+    .gateway-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 8px;
+      color: #769487;
+      font-size: 9px;
+    }
+    .gateway-row strong { color: #c2d9c6; font-family: var(--mono); font-weight: 400; }
+    .signal-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 15px;
+      margin-top: 9px;
+    }
+    .signal-bars i {
+      flex: 1;
+      height: var(--h, 50%);
+      border-radius: 2px;
+      background: rgba(183, 221, 118, .45);
+      animation: signalShift 4s ease-in-out infinite alternate;
+    }
+    .signal-bars i:nth-child(2n) { animation-delay: -.7s; background: rgba(183, 221, 118, .62); }
+    .signal-bars i:nth-child(3n) { animation-delay: -1.3s; background: rgba(183, 221, 118, .3); }
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 8px 4px;
+    }
+    .avatar {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: 33px;
+      height: 33px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #d8f0b0, #9fcf65);
+      color: #173d2b;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, .13);
+    }
+    .user-copy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+    .user-copy b { color: #e6f4e7; font-size: 11.5px; font-weight: 500; }
+    .user-copy span { color: #84a493; font-family: var(--mono); font-size: 8.5px; }
+    .user-copy small { color: #658677; font-size: 8.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-more {
+      margin-left: auto;
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: #6d8b7a;
+      cursor: pointer;
+    }
+    .user-more:hover { background: rgba(255, 255, 255, .07); color: #d9ead8; }
+
+    /* ============================================================
+       Main shell / top bar
+       ============================================================ */
+    .main-shell { margin-left: 260px; min-height: 100vh; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      height: 74px;
+      padding: 0 clamp(22px, 3vw, 44px);
+      border-bottom: 1px solid rgba(177, 198, 184, .48);
+      background: rgba(246, 250, 245, .84);
+      backdrop-filter: blur(18px) saturate(1.2);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 18px; min-width: 0; }
+    .mobile-menu {
+      display: none;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .breadcrumb .icon { width: 12px; height: 12px; color: #a7b8ae; }
+    .breadcrumb b { color: var(--ink-soft); font-weight: 500; }
+    .topbar-right { display: flex; align-items: center; gap: 17px; }
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 26px;
+      padding: 0 9px;
+      border: 1px solid rgba(32, 159, 119, .22);
+      border-radius: 6px;
+      color: #287d60;
+      background: #eef9f0;
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+    .live-pill i {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--green-500);
+      box-shadow: 0 0 0 3px rgba(32, 159, 119, .09);
+      animation: softPulse 2.2s infinite;
+    }
+    .clock { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
+    .clock strong { color: var(--ink); font-family: var(--mono); font-size: 15px; font-weight: 500; letter-spacing: .03em; }
+    .clock span { color: var(--faint); font-size: 8.5px; }
+    .icon-button {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .75);
+      color: #5f796e;
+      cursor: pointer;
+      transition: .2s;
+    }
+    .icon-button:hover { border-color: var(--line-strong); color: var(--green-600); background: #fff; }
+    .icon-button .notify-dot {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--amber);
+      border: 1px solid #f8fbf7;
+    }
+    .top-avatar {
+      display: grid;
+      place-items: center;
+      width: 33px;
+      height: 33px;
+      border-radius: 50%;
+      background: var(--green-900);
+      color: var(--lime);
+      border: 2px solid rgba(255, 255, 255, .7);
+      box-shadow: 0 3px 10px rgba(20, 68, 51, .13);
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .notification-pop {
+      position: fixed;
+      top: 67px;
+      right: clamp(22px, 3vw, 44px);
+      z-index: 80;
+      width: 330px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfdfb;
+      box-shadow: var(--shadow-strong);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-6px);
+      transition: .2s;
+    }
+    .notification-pop.is-open { opacity: 1; visibility: visible; transform: none; }
+    .notification-pop h3 { margin: 0 0 9px; font-size: 12px; font-weight: 600; }
+    .notification-item {
+      display: flex;
+      gap: 9px;
+      padding: 9px 2px;
+      border-top: 1px solid #edf2ed;
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .notification-item .dot { flex: 0 0 auto; width: 5px; height: 5px; margin-top: 6px; border-radius: 50%; background: var(--green-500); }
+    .notification-item.is-warn .dot { background: var(--amber); }
+    .notification-item b { display: block; color: var(--ink-soft); font-weight: 500; margin-bottom: 1px; }
+    .notification-item time { margin-left: auto; color: var(--faint); font-family: var(--mono); font-size: 8px; white-space: nowrap; }
+    .main-content {
+      width: min(1560px, 100%);
+      margin: 0 auto;
+      padding: 10px clamp(22px, 3vw, 44px) 42px;
+    }
+    .section { padding-top: 42px; scroll-margin-top: 88px; }
+    .section + .section { margin-top: 46px; }
+    .section-line { height: 1px; margin-top: 2px; background: linear-gradient(90deg, transparent, var(--line-strong), transparent); opacity: .6; }
+
+    /* ============================================================
+       Page hero
+       ============================================================ */
+    .hero-section { padding-top: 34px; }
+    .hero-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 36px;
+      padding-bottom: 26px;
+    }
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: #6f8d7e;
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 22px;
+      height: 1px;
+      background: var(--green-500);
+      box-shadow: 0 0 7px rgba(32, 159, 119, .3);
+    }
+    .hero-title-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .hero-title-row h1 {
+      margin: 0;
+      color: #112f25;
+      font-size: clamp(31px, 3.1vw, 43px);
+      font-weight: 560;
+      line-height: 1.16;
+      letter-spacing: -.045em;
+    }
+    .chapter-tag {
+      display: inline-flex;
+      align-items: center;
+      height: 28px;
+      padding: 0 10px;
+      border: 1px solid rgba(22, 114, 89, .25);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .6);
+      color: var(--green-600);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .04em;
+    }
+    .hero-lead {
+      max-width: 750px;
+      margin: 12px 0 0;
+      color: #698178;
+      font-size: 13.5px;
+      line-height: 1.75;
+    }
+    .hero-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 18px; }
+    .hero-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      height: 29px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .56);
+      color: #608075;
+      font-size: 10px;
+      cursor: pointer;
+      transition: .2s;
+    }
+    .hero-chip:hover { border-color: var(--green-400); color: var(--green-700); background: #fff; }
+    .hero-chip i { width: 5px; height: 5px; border-radius: 50%; background: var(--green-500); }
+    .hero-chip:nth-child(2) i { background: var(--blue); }
+    .hero-chip:nth-child(3) i { background: var(--amber); }
+    .hero-side { flex: 0 0 auto; text-align: right; }
+    .quick-label { color: #88a096; font-family: var(--mono); font-size: 8.5px; letter-spacing: .1em; }
+    .quick-date { margin-top: 4px; color: #1d4738; font-family: var(--mono); font-size: 22px; letter-spacing: -.04em; }
+    .quick-meta { display: flex; justify-content: flex-end; gap: 7px; margin-top: 5px; color: #879d92; font-size: 9px; }
+    .quick-meta span + span::before { content: "·"; margin-right: 7px; color: #b0c0b5; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 35px;
+      padding: 0 13px;
+      border-radius: 7px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #557367;
+      font-size: 10.5px;
+      cursor: pointer;
+      transition: .2s;
+      white-space: nowrap;
+    }
+    .btn:hover { border-color: var(--green-400); color: var(--green-700); }
+    .btn-dark {
+      margin-top: 13px;
+      border-color: var(--green-800);
+      background: var(--green-800);
+      color: #e7f5e9;
+      box-shadow: 0 8px 19px rgba(13, 58, 46, .14);
+    }
+    .btn-dark:hover { border-color: var(--green-700); color: #fff; background: var(--green-700); }
+
+    /* ============================================================
+       KPI cards
+       ============================================================ */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; }
+    .kpi-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 112px;
+      padding: 16px 17px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, .84);
+      box-shadow: 0 9px 28px rgba(33, 70, 57, .035);
+    }
+    .kpi-card::after {
+      content: "";
+      position: absolute;
+      right: -30px;
+      bottom: -44px;
+      width: 130px;
+      height: 130px;
+      border: 1px solid rgba(35, 130, 99, .08);
+      border-radius: 50%;
+    }
+    .kpi-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .kpi-label { color: #7b9288; font-size: 10.5px; }
+    .kpi-icon {
+      display: grid;
+      place-items: center;
+      width: 27px;
+      height: 27px;
+      border-radius: 7px;
+      background: var(--green-100);
+      color: var(--green-600);
+    }
+    .kpi-icon .icon { width: 15px; height: 15px; }
+    .kpi-card:nth-child(2) .kpi-icon { background: var(--amber-soft); color: var(--amber); }
+    .kpi-card:nth-child(3) .kpi-icon { background: var(--blue-soft); color: var(--blue); }
+    .kpi-card:nth-child(4) .kpi-icon { background: #f0edf9; color: var(--violet); }
+    .kpi-value { display: flex; align-items: baseline; gap: 6px; margin-top: 6px; line-height: 1.1; }
+    .kpi-value strong { color: #173e2f; font-family: var(--mono); font-size: clamp(23px, 2.2vw, 29px); font-weight: 500; letter-spacing: -.06em; }
+    .kpi-value span { color: #8aa196; font-family: var(--mono); font-size: 9.5px; }
+    .kpi-foot { display: flex; align-items: center; gap: 5px; margin-top: 10px; color: #94a79e; font-size: 9px; }
+    .trend-up { color: var(--green-600); font-family: var(--mono); font-size: 8.5px; }
+    .trend-warm { color: var(--amber); font-family: var(--mono); font-size: 8.5px; }
+    .kpi-bars { display: flex; align-items: flex-end; gap: 2px; height: 13px; margin-left: auto; opacity: .7; }
+    .kpi-bars i { width: 3px; height: var(--h, 40%); border-radius: 2px; background: rgba(32, 159, 119, .34); }
+    .kpi-card:nth-child(2) .kpi-bars i { background: rgba(217, 152, 53, .35); }
+    .kpi-card:nth-child(3) .kpi-bars i { background: rgba(58, 134, 199, .26); }
+
+    /* ============================================================
+       Overview panels
+       ============================================================ */
+    .overview-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.8fr) minmax(290px, .85fr);
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .panel {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: rgba(255, 255, 255, .82);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 21px 12px;
+    }
+    .panel-kicker {
+      margin-bottom: 5px;
+      color: #8ca197;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .panel-head h2, .panel h2 { margin: 0; color: #1b3b2f; font-size: 15px; font-weight: 560; letter-spacing: -.015em; }
+    .panel-head .sub { margin: 5px 0 0; color: #8a9d94; font-size: 10px; }
+    .chart-controls { display: flex; gap: 3px; padding: 2px; border-radius: 6px; background: var(--surface-soft); }
+    .chart-controls button {
+      height: 23px;
+      padding: 0 8px;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: #93a49a;
+      font-family: var(--mono);
+      font-size: 8px;
+      cursor: pointer;
+    }
+    .chart-controls button.is-active { background: #fff; color: var(--green-600); box-shadow: 0 1px 4px rgba(23, 66, 50, .1); }
+    .chart-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; color: #7f9389; font-size: 9px; }
+    .chart-legend span { display: flex; align-items: center; gap: 5px; }
+    .chart-legend i { width: 12px; height: 2px; border-radius: 2px; background: var(--lc, var(--green-500)); }
+    .chart-wrap { position: relative; padding: 4px 12px 0; }
+    .chart-wrap canvas { display: block; width: 100%; height: 255px; }
+    .chart-unit { color: #9aada3; font-family: var(--mono); font-size: 8px; }
+    .chart-footer {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      margin: 7px 18px 17px;
+      border-top: 1px solid #edf2ed;
+    }
+    .chart-footer div {
+      flex: 1;
+      padding: 11px 12px 0 0;
+      border-right: 1px solid #edf2ed;
+    }
+    .chart-footer div:last-child { border-right: 0; padding-right: 0; padding-left: 12px; }
+    .chart-footer div + div { padding-left: 12px; }
+    .chart-footer span { display: block; color: #95a79e; font-size: 8.5px; }
+    .chart-footer strong { display: block; margin-top: 2px; color: #315447; font-family: var(--mono); font-size: 12px; font-weight: 500; }
+    .overview-side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+    .side-card { flex: 1; }
+    .structure-body { padding: 4px 20px 17px; display: flex; align-items: center; gap: 18px; }
+    .donut {
+      position: relative;
+      flex: 0 0 auto;
+      width: 103px;
+      height: 103px;
+      border-radius: 50%;
+      background: conic-gradient(var(--green-500) 0 54%, var(--amber) 54% 70%, var(--blue) 70% 91%, #b7dd76 91% 100%);
+      transition: background .5s;
+    }
+    .donut::before {
+      content: "";
+      position: absolute;
+      inset: 11px;
+      border-radius: 50%;
+      background: #fbfdfb;
+      box-shadow: inset 0 0 0 1px rgba(210, 229, 214, .42);
+    }
+    .donut-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+    }
+    .donut-center strong { color: #1d4b38; font-family: var(--mono); font-size: 20px; font-weight: 500; letter-spacing: -.05em; }
+    .donut-center span { color: #86a196; font-size: 8px; }
+    .energy-legend { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+    .energy-row { display: flex; align-items: center; gap: 7px; color: #70877c; font-size: 9.5px; }
+    .energy-row i { width: 6px; height: 6px; border-radius: 2px; background: var(--ec, var(--green-500)); }
+    .energy-row strong { margin-left: auto; color: #345646; font-family: var(--mono); font-size: 9px; font-weight: 500; }
+    .energy-row span { color: #a1b0a7; font-family: var(--mono); font-size: 8px; width: 30px; text-align: right; }
+    .comm-body { padding: 2px 20px 17px; }
+    .comm-health { display: flex; align-items: center; gap: 11px; }
+    .health-orbit {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: conic-gradient(var(--green-500) 0 99.8%, #e7eee7 99.8% 100%);
+    }
+    .health-orbit::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: #fbfdfb; }
+    .health-orbit b { position: relative; color: #245b43; font-family: var(--mono); font-size: 10px; font-weight: 500; }
+    .comm-health-copy { display: flex; flex-direction: column; gap: 2px; }
+    .comm-health-copy strong { color: #315448; font-size: 11px; font-weight: 500; }
+    .comm-health-copy span { color: #92a49b; font-size: 9px; }
+    .comm-metrics { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 13px; border-top: 1px solid #edf2ed; padding-top: 10px; gap: 8px; }
+    .comm-metrics span { display: block; color: #9aa9a1; font-size: 8px; }
+    .comm-metrics strong { display: block; color: #395948; font-family: var(--mono); font-size: 10.5px; font-weight: 500; margin-top: 2px; }
+    .comm-status-row { display: flex; align-items: center; gap: 6px; margin-top: 10px; color: #718a7d; font-size: 9px; }
+    .comm-status-row .online-dot { width: 4px; height: 4px; }
+
+    /* ============================================================
+       Section heading & category lenses
+       ============================================================ */
+    .section-heading {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 26px;
+      margin-bottom: 19px;
+    }
+    .section-heading h2 {
+      margin: 0;
+      color: #183a2e;
+      font-size: clamp(23px, 2.15vw, 29px);
+      font-weight: 560;
+      letter-spacing: -.035em;
+      line-height: 1.25;
+    }
+    .section-heading p { max-width: 650px; margin: 7px 0 0; color: #879a91; font-size: 11.5px; line-height: 1.7; }
+    .section-index {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      margin-left: 7px;
+      padding: 0 7px;
+      border-radius: 4px;
+      background: #e6f1e9;
+      color: #51816d;
+      font-family: var(--mono);
+      font-size: 8.5px;
+      vertical-align: 2px;
+      letter-spacing: .02em;
+    }
+    .count-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 0 0 auto;
+      padding: 10px 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .56);
+    }
+    .count-badge strong { color: var(--green-600); font-family: var(--mono); font-size: 23px; font-weight: 500; letter-spacing: -.08em; }
+    .count-badge span { color: #8a9e93; font-size: 9px; line-height: 1.45; }
+    .lens-group { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+    .lens {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      width: 65px;
+      height: 65px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .68);
+      color: #738b80;
+      cursor: pointer;
+      transition: .22s;
+    }
+    .lens:hover { border-color: var(--green-400); transform: translateY(-2px); }
+    .lens strong { font-size: 12px; font-weight: 500; letter-spacing: .03em; }
+    .lens span { font-family: var(--mono); font-size: 7px; letter-spacing: .09em; color: #9bac9f; }
+    .lens.is-active { border-color: var(--green-500); background: var(--green-900); color: #f0f9ee; }
+    .lens.is-active span { color: #a7c6aa; }
+    .lens[data-filter="interaction"].is-active { border-color: var(--blue); background: #1c4565; }
+    .lens[data-filter="management"].is-active { border-color: var(--amber); background: #735028; }
+    .lens-group .lens:nth-child(2) { margin-top: 11px; }
+    .lens-group .lens:nth-child(3) { margin-top: 22px; }
+
+    /* ============================================================
+       Architecture
+       ============================================================ */
+    .architecture-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .layer-card {
+      position: relative;
+      overflow: hidden;
+      padding: 19px 19px 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, .8);
+      box-shadow: 0 9px 27px rgba(28, 65, 51, .035);
+      cursor: pointer;
+      transition: transform .23s, box-shadow .23s, border-color .23s;
+    }
+    .layer-card:hover { transform: translateY(-3px); border-color: var(--line-strong); box-shadow: 0 18px 35px rgba(28, 70, 52, .09); }
+    .layer-card::after {
+      content: "";
+      position: absolute;
+      right: -57px;
+      bottom: -82px;
+      width: 184px;
+      height: 184px;
+      border: 1px solid rgba(32, 159, 119, .12);
+      border-radius: 50%;
+    }
+    .layer-card:nth-child(2) { background: linear-gradient(145deg, #f1f9f1, #e8f4ec); }
+    .layer-card:nth-child(3) {
+      color: #edf8ed;
+      border-color: var(--green-700);
+      background:
+        radial-gradient(ellipse 80% 80% at 100% 0%, rgba(183, 221, 118, .14), transparent 65%),
+        linear-gradient(145deg, #0e4233, #092f25);
+      box-shadow: 0 18px 42px rgba(10, 51, 38, .16);
+    }
+    .layer-top { position: relative; z-index: 1; display: flex; align-items: center; gap: 9px; }
+    .layer-number {
+      color: #a6b9ae;
+      font-family: var(--mono);
+      font-size: 22px;
+      letter-spacing: -.08em;
+      line-height: 1;
+    }
+    .layer-card:nth-child(3) .layer-number { color: #a9c98a; }
+    .layer-en { margin-left: auto; color: #a2b3a9; font-family: var(--mono); font-size: 7.5px; letter-spacing: .08em; }
+    .layer-card:nth-child(2) .layer-en { color: #87a191; }
+    .layer-card:nth-child(3) .layer-en { color: #8eb39a; }
+    .layer-icon {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      margin-left: 4px;
+      border-radius: 8px;
+      background: #e5f3e8;
+      color: var(--green-600);
+    }
+    .layer-card:nth-child(2) .layer-icon { background: #fff; box-shadow: 0 3px 8px rgba(20, 73, 53, .06); }
+    .layer-card:nth-child(3) .layer-icon { background: rgba(183, 221, 118, .14); color: var(--lime); }
+    .layer-card h3 { position: relative; z-index: 1; margin: 17px 0 7px; color: #183b2d; font-size: 19px; font-weight: 560; letter-spacing: -.025em; }
+    .layer-card:nth-child(3) h3 { color: #f1faef; }
+    .layer-card p { position: relative; z-index: 1; min-height: 61px; margin: 0; color: #72897e; font-size: 11.5px; line-height: 1.68; }
+    .layer-card:nth-child(3) p { color: #a9c5b2; }
+    .layer-tags { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 4px; margin-top: 13px; }
+    .layer-tags span {
+      padding: 3px 6px;
+      border: 1px solid #deebe1;
+      border-radius: 4px;
+      color: #789185;
+      background: rgba(255, 255, 255, .55);
+      font-size: 8.5px;
+    }
+    .layer-card:nth-child(2) .layer-tags span { background: rgba(255, 255, 255, .45); }
+    .layer-card:nth-child(3) .layer-tags span { color: #b1d1b6; border-color: rgba(183, 221, 118, .16); background: rgba(255, 255, 255, .05); }
+    .layer-footer {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(123, 157, 139, .15);
+    }
+    .layer-footer span { color: #97a99f; font-size: 8px; }
+    .layer-footer strong { margin-left: auto; color: #41654f; font-family: var(--mono); font-size: 10px; font-weight: 500; }
+    .layer-card:nth-child(3) .layer-footer { border-top-color: rgba(183, 221, 118, .13); }
+    .layer-card:nth-child(3) .layer-footer span { color: #729a84; }
+    .layer-card:nth-child(3) .layer-footer strong { color: var(--lime); }
+    .architecture-flow {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      margin-top: 13px;
+      padding: 10px 15px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .42);
+      color: #82978c;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: .03em;
+    }
+    .architecture-flow .flow-rail { flex: 1; position: relative; height: 1px; background: repeating-linear-gradient(90deg, #acc4b6 0 5px, transparent 5px 11px); }
+    .architecture-flow .flow-rail::before, .architecture-flow .flow-rail::after {
+      content: "";
+      position: absolute;
+      top: -3px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green-400);
+    }
+    .architecture-flow .flow-rail::before { left: 0; }
+    .architecture-flow .flow-rail::after { right: 0; background: var(--amber); }
+    .architecture-flow strong { color: #547466; font-weight: 500; }
+
+    /* ============================================================
+       Data matrix
+       ============================================================ */
+    .data-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin: -1px 0 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+    .data-toolbar-left { display: flex; align-items: center; gap: 11px; }
+    .view-count { color: #8fa298; font-family: var(--mono); font-size: 8.5px; letter-spacing: .02em; }
+    .view-count b { color: #4c755f; font-weight: 500; }
+    .clear-filter {
+      border: 0;
+      background: transparent;
+      color: var(--green-600);
+      font-size: 9px;
+      cursor: pointer;
+      padding: 0;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      width: min(268px, 100%);
+      height: 32px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, .7);
+      color: #99aba1;
+      transition: .2s;
+    }
+    .search-box:focus-within { border-color: var(--green-400); box-shadow: 0 0 0 3px rgba(32, 159, 119, .06); background: #fff; }
+    .search-box .icon { width: 14px; height: 14px; flex: 0 0 auto; }
+    .search-box input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 10px; }
+    .search-box input::placeholder { color: #a4b2aa; }
+    .data-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+    .data-column { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+    .group-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--group-color, var(--green-500));
+      border-radius: 9px;
+      background: rgba(255, 255, 255, .56);
+    }
+    .group-head::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--group-color, var(--green-500));
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--group-color, var(--green-500)) 9%, transparent);
+    }
+    .group-title { color: #3c5e4e; font-size: 13px; font-weight: 560; }
+    .group-en { color: #a0afa6; font-family: var(--mono); font-size: 7px; letter-spacing: .08em; }
+    .group-count { margin-left: auto; color: #8ba096; font-family: var(--mono); font-size: 9px; }
+    .group-desc { margin: -5px 3px 2px; color: #99a99f; font-size: 8.5px; line-height: 1.5; }
+    .data-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 181px;
+      padding: 14px 14px 12px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(255, 255, 255, .88);
+      box-shadow: 0 5px 18px rgba(24, 62, 48, .022);
+      cursor: pointer;
+      transition: .22s;
+      text-align: left;
+    }
+    .data-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 17px;
+      width: 25px;
+      height: 2px;
+      border-radius: 0 0 3px 3px;
+      background: var(--card-color, var(--green-500));
+      opacity: .7;
+    }
+    .data-card:hover { transform: translateY(-2px); border-color: var(--line-strong); box-shadow: 0 13px 30px rgba(26, 65, 49, .08); }
+    .data-card:focus-visible, .function-card:focus-visible, .layer-card:focus-visible { outline: 2px solid var(--green-500); outline-offset: 3px; }
+    .data-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .data-card-icon {
+      display: grid;
+      place-items: center;
+      width: 33px;
+      height: 33px;
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--card-color, var(--green-500)) 10%, #fff);
+      color: var(--card-color, var(--green-600));
+    }
+    .data-card-icon .icon { width: 18px; height: 18px; }
+    .data-index { color: #b2c0b8; font-family: var(--mono); font-size: 9px; letter-spacing: .05em; }
+    .data-card h3 { margin: 11px 0 5px; color: #244b3a; font-size: 14.5px; font-weight: 560; letter-spacing: -.012em; }
+    .data-desc { margin: 0; color: #71877c; font-size: 10.5px; line-height: 1.66; }
+    .data-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 10px; }
+    .data-tags span {
+      padding: 2px 5px;
+      border: 1px solid #e4ece6;
+      border-radius: 3px;
+      color: #8ca096;
+      background: #fbfcfa;
+      font-size: 8px;
+    }
+    .data-card-foot {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: auto;
+      padding-top: 10px;
+      color: #a0b0a6;
+      font-family: var(--mono);
+      font-size: 8px;
+    }
+    .data-card-foot .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--card-color, var(--green-500)); }
+    .data-card-foot span:last-child { margin-left: auto; color: #9dada3; }
+    .no-data {
+      padding: 46px 20px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 12px;
+      text-align: center;
+      color: #8da299;
+      font-size: 11px;
+    }
+    .no-data strong { display: block; color: #4b6d5a; font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+
+    /* ============================================================
+       Energy management functions
+       ============================================================ */
+    .ems-loop {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin: 0 0 14px;
+      padding: 10px 15px;
+      border: 1px solid rgba(19, 92, 69, .18);
+      border-radius: 9px;
+      background: linear-gradient(90deg, #e7f3e9, #f7faf5);
+      color: #648578;
+      font-size: 9px;
+      overflow-x: auto;
+    }
+    .ems-loop span { flex: 0 0 auto; padding: 2px 7px; border-radius: 4px; background: rgba(255, 255, 255, .65); }
+    .ems-loop i { flex: 1; min-width: 18px; height: 1px; margin: 0 7px; background: repeating-linear-gradient(90deg, #b1c9b9 0 4px, transparent 4px 8px); }
+    .ems-loop b { margin-left: 14px; color: #4f7563; font-family: var(--mono); font-size: 8px; font-weight: 400; white-space: nowrap; }
+    .function-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
+    .function-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 230px;
+      padding: 18px 18px 15px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: rgba(255, 255, 255, .86);
+      box-shadow: 0 8px 23px rgba(30, 66, 51, .027);
+      cursor: pointer;
+      overflow: hidden;
+      transition: .22s;
+      text-align: left;
+    }
+    .function-card::after {
+      content: "";
+      position: absolute;
+      top: -42px;
+      right: -48px;
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      border: 1px solid color-mix(in srgb, var(--accent, var(--green-500)) 11%, transparent);
+    }
+    .function-card:hover { transform: translateY(-3px); border-color: var(--line-strong); box-shadow: 0 15px 34px rgba(24, 61, 47, .08); }
+    .function-head { display: flex; align-items: center; gap: 9px; }
+    .function-icon {
+      display: grid;
+      place-items: center;
+      width: 35px;
+      height: 35px;
+      border-radius: 9px;
+      background: color-mix(in srgb, var(--accent, var(--green-500)) 10%, #fff);
+      color: var(--accent, var(--green-600));
+    }
+    .function-icon .icon { width: 19px; height: 19px; }
+    .function-head .function-kind { color: #9bada2; font-family: var(--mono); font-size: 7.5px; letter-spacing: .07em; }
+    .function-status { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; color: #77a88d; font-family: var(--mono); font-size: 7.5px; }
+    .function-status i { width: 4px; height: 4px; border-radius: 50%; background: var(--green-500); }
+    .function-card h3 { margin: 13px 0 5px; color: #244b3a; font-size: 16px; font-weight: 560; letter-spacing: -.018em; }
+    .function-desc { margin: 0; color: #71877c; font-size: 10.5px; line-height: 1.68; }
+    .function-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      margin-top: auto;
+      padding-top: 13px;
+      border-top: 1px solid #edf2ed;
+    }
+    .function-meta span { color: #9aaba1; font-size: 8.5px; }
+    .function-meta strong { margin-left: auto; color: #416653; font-family: var(--mono); font-size: 10.5px; font-weight: 500; }
+    .function-meta em { color: #8da299; font-family: var(--mono); font-size: 8px; font-style: normal; }
+    .function-arrow { position: absolute; right: 17px; bottom: 17px; color: #c2d0c8; transition: .2s; }
+    .function-card:hover .function-arrow { color: var(--green-600); transform: translate(2px, -2px); }
+    .function-arrow .icon { width: 14px; height: 14px; }
+    .section-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: rgba(255, 255, 255, .45);
+      color: #82968c;
+      font-size: 9px;
+      line-height: 1.6;
+    }
+    .section-note .icon { color: var(--green-500); margin-top: 1px; }
+    .section-note strong { color: #5c786b; font-weight: 500; }
+
+    /* ============================================================
+       Footer
+       ============================================================ */
+    .app-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      width: min(1560px, 100%);
+      margin: 0 auto;
+      padding: 19px clamp(22px, 3vw, 44px) 28px;
+      border-top: 1px solid var(--line);
+      color: #91a198;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: .02em;
+    }
+    .app-footer span:nth-child(2) { color: #697f72; }
+    .app-footer .footer-credit { color: #637d6e; }
+
+    /* ============================================================
+       Drawer
+       ============================================================ */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(8, 34, 25, .26);
+      backdrop-filter: blur(3px);
+      opacity: 0;
+      visibility: hidden;
+      transition: .25s;
+    }
+    .drawer-backdrop.is-open { opacity: 1; visibility: visible; }
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 101;
+      display: flex;
+      flex-direction: column;
+      width: min(444px, 100vw);
+      background: #fbfdfb;
+      border-left: 1px solid var(--line);
+      box-shadow: -22px 0 60px rgba(9, 42, 31, .14);
+      transform: translateX(103%);
+      transition: transform .32s cubic-bezier(.2, .8, .2, 1);
+    }
+    .drawer.is-open { transform: none; }
+    .drawer-head {
+      position: relative;
+      flex: 0 0 auto;
+      padding: 27px 25px 22px;
+      color: #eef9ef;
+      background:
+        radial-gradient(ellipse 88% 80% at 110% 0%, rgba(183, 221, 118, .2), transparent 65%),
+        linear-gradient(145deg, #0e4233, #092e24);
+      overflow: hidden;
+    }
+    .drawer-head::after {
+      content: "";
+      position: absolute;
+      right: -45px;
+      bottom: -75px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 1px solid rgba(183, 221, 118, .14);
+    }
+    .drawer-kicker {
+      position: relative;
+      z-index: 1;
+      color: #a4c6a9;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+    .drawer-head h2 { position: relative; z-index: 1; margin: 8px 0 7px; font-size: 24px; font-weight: 530; letter-spacing: -.03em; }
+    .drawer-head p { position: relative; z-index: 1; margin: 0; color: #b4cdb8; font-size: 10.5px; line-height: 1.7; max-width: 360px; }
+    .drawer-close {
+      position: absolute;
+      top: 17px;
+      right: 17px;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(230, 250, 231, .18);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, .06);
+      color: #c5e0c8;
+      cursor: pointer;
+      transition: .2s;
+    }
+    .drawer-close:hover { background: rgba(255, 255, 255, .13); color: #fff; }
+    .drawer-body { flex: 1; overflow-y: auto; padding: 22px 25px 28px; scrollbar-width: thin; }
+    .drawer-block { margin-bottom: 22px; }
+    .drawer-block:last-child { margin-bottom: 0; }
+    .drawer-block h3 {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin: 0 0 10px;
+      color: #385e4c;
+      font-size: 11px;
+      font-weight: 560;
+    }
+    .drawer-block h3::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: var(--green-500); }
+    .drawer-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .drawer-stat {
+      padding: 10px 11px;
+      border: 1px solid #e7eee8;
+      border-radius: 8px;
+      background: #fff;
+    }
+    .drawer-stat span { display: block; color: #95a69c; font-size: 8px; }
+    .drawer-stat strong { display: block; margin-top: 3px; color: #315847; font-family: var(--mono); font-size: 12px; font-weight: 500; }
+    .drawer-chain { display: flex; flex-direction: column; gap: 0; }
+    .chain-step { position: relative; display: flex; align-items: center; gap: 9px; min-height: 34px; color: #72877c; font-size: 10px; }
+    .chain-step::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 22px;
+      bottom: -12px;
+      width: 1px;
+      background: #dfe9e1;
+    }
+    .chain-step:last-child::before { display: none; }
+    .chain-step .chain-dot { position: relative; z-index: 1; width: 13px; height: 13px; border: 1px solid #bad2c2; border-radius: 50%; background: #fbfdfb; display: grid; place-items: center; }
+    .chain-step .chain-dot::after { content: ""; width: 3px; height: 3px; border-radius: 50%; background: var(--green-500); }
+    .chain-step:last-child .chain-dot { border-color: var(--green-500); background: var(--green-500); }
+    .chain-step:last-child .chain-dot::after { background: #fff; }
+    .drawer-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .drawer-tags span {
+      padding: 4px 7px;
+      border: 1px solid #e0eae2;
+      border-radius: 4px;
+      background: #f9fbf9;
+      color: #708b7c;
+      font-size: 9px;
+    }
+    .drawer-note {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-left: 2px solid var(--lime);
+      background: #f3f9f1;
+      color: #82978a;
+      font-size: 9px;
+      line-height: 1.65;
+    }
+    .drawer-cta {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      margin-top: 18px;
+      height: 38px;
+      border: 1px solid var(--green-700);
+      border-radius: 7px;
+      background: var(--green-700);
+      color: #eef9ee;
+      font-size: 10px;
+      cursor: pointer;
+      transition: .2s;
+    }
+    .drawer-cta:hover { background: var(--green-600); }
+    body.drawer-open { overflow: hidden; }
+
+    /* ============================================================
+       Toast
+       ============================================================ */
+    .toast-stack {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 150;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      width: 310px;
+      max-width: calc(100vw - 32px);
+      pointer-events: none;
+    }
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .96);
+      box-shadow: 0 14px 34px rgba(16, 55, 40, .14);
+      animation: toastIn .25s ease;
+      pointer-events: auto;
+    }
+    .toast .toast-icon { display: grid; place-items: center; width: 20px; height: 20px; flex: 0 0 auto; border-radius: 50%; background: var(--green-100); color: var(--green-600); }
+    .toast strong { display: block; color: #36594a; font-size: 10px; font-weight: 550; }
+    .toast p { margin: 2px 0 0; color: #82958b; font-size: 9px; line-height: 1.5; }
+    .toast.is-leaving { opacity: 0; transform: translateX(12px); transition: .25s; }
+    .toast .toast-icon .icon { width: 12px; height: 12px; }
+    [hidden] { display: none !important; }
+
+    /* ============================================================
+       Motion
+       ============================================================ */
+    @keyframes softPulse { 0%, 100% { opacity: .9; transform: scale(1); } 50% { opacity: .45; transform: scale(.78); } }
+    @keyframes signalShift { from { transform: scaleY(.65); transform-origin: bottom; } to { transform: scaleY(1); transform-origin: bottom; } }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+    }
+
+    /* ============================================================
+       Responsive
+       ============================================================ */
+    @media (max-width: 1280px) {
+      .sidebar { width: 236px; }
+      .main-shell { margin-left: 236px; }
+      .main-content, .app-footer { padding-left: 28px; padding-right: 28px; }
+    }
+    @media (max-width: 1100px) {
+      .hero-head { gap: 22px; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .kpi-card { min-height: 104px; }
+      .overview-grid { grid-template-columns: minmax(0, 1.55fr) minmax(255px, .85fr); }
+      .structure-body { gap: 12px; }
+      .donut { width: 88px; height: 88px; }
+      .data-card { min-height: 195px; }
+      .function-card { min-height: 245px; }
+    }
+    @media (max-width: 980px) {
+      .sidebar {
+        position: relative;
+        inset: auto;
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 13px;
+        padding: 13px 20px;
+        border-right: 0;
+        overflow: visible;
+      }
+      .sidebar::before { opacity: .08; }
+      .brand { flex: 0 0 auto; }
+      .brand-mark { width: 36px; height: 36px; border-radius: 9px; }
+      .brand-mark svg { width: 23px; height: 23px; }
+      .brand-copy strong { font-size: 13px; }
+      .brand-copy small { font-size: 9px; }
+      .site-switcher, .sidebar-bottom { display: none; }
+      .side-nav {
+        flex: 1 1 500px;
+        flex-direction: row;
+        align-items: center;
+        gap: 3px;
+        margin: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .side-nav::-webkit-scrollbar { display: none; }
+      .nav-eyebrow { display: none; }
+      .side-link { flex: 0 0 auto; min-height: 34px; padding: 6px 10px; font-size: 11px; }
+      .side-link .icon { width: 14px; height: 14px; }
+      .side-link .nav-count { display: none; }
+      .side-link.is-active { box-shadow: inset 0 -2px 0 var(--lime); border-radius: 7px; background: rgba(183, 221, 118, .08); }
+      .main-shell { margin-left: 0; }
+      .topbar { height: 60px; padding: 0 20px; }
+      .main-content { padding: 0 20px 30px; }
+      .app-footer { padding-left: 20px; padding-right: 20px; }
+      .hero-head { align-items: flex-start; flex-direction: column; }
+      .hero-side { text-align: left; }
+      .quick-meta { justify-content: flex-start; }
+      .overview-grid { grid-template-columns: 1fr; }
+      .overview-side { display: grid; grid-template-columns: 1fr 1fr; }
+      .architecture-grid { gap: 10px; }
+      .layer-card { padding: 16px 15px 14px; }
+      .layer-card p { min-height: 85px; font-size: 10.5px; }
+      .data-grid { gap: 10px; }
+      .data-card { padding: 13px 12px 11px; }
+      .function-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .function-card { min-height: 235px; }
+    }
+    @media (max-width: 760px) {
+      .topbar-right { gap: 10px; }
+      .breadcrumb { display: none; }
+      .live-pill { height: 24px; }
+      .clock span { display: none; }
+      .clock strong { font-size: 13px; }
+      .main-content { padding-left: 15px; padding-right: 15px; }
+      .app-footer { padding-left: 15px; padding-right: 15px; flex-direction: column; align-items: flex-start; gap: 5px; }
+      .section { padding-top: 32px; scroll-margin-top: 72px; }
+      .hero-title-row h1 { font-size: 31px; }
+      .hero-lead { font-size: 12px; }
+      .kpi-grid { gap: 9px; }
+      .kpi-card { padding: 13px 13px 11px; }
+      .kpi-value strong { font-size: 24px; }
+      .overview-side { grid-template-columns: 1fr; }
+      .section-heading { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .section-heading p { font-size: 10.5px; }
+      .lens-group { align-self: stretch; justify-content: flex-end; }
+      .lens { width: 58px; height: 58px; }
+      .lens-group .lens:nth-child(2) { margin-top: 5px; }
+      .lens-group .lens:nth-child(3) { margin-top: 10px; }
+      .count-badge { display: none; }
+      .architecture-grid { grid-template-columns: 1fr; }
+      .layer-card p { min-height: 0; }
+      .architecture-flow { font-size: 7px; }
+      .data-toolbar { flex-direction: column; align-items: stretch; gap: 9px; }
+      .search-box { width: 100%; height: 34px; }
+      .data-grid { grid-template-columns: 1fr; gap: 12px; }
+      .data-column { gap: 8px; }
+      .group-desc { margin-bottom: 4px; }
+      .data-card { min-height: 0; }
+      .data-desc { font-size: 10.5px; }
+      .function-grid { grid-template-columns: 1fr; }
+      .function-card { min-height: 0; }
+      .function-desc { font-size: 10.5px; }
+      .notification-pop { right: 12px; width: min(330px, calc(100vw - 24px)); }
+      .chart-wrap canvas { height: 225px; }
+      .chart-footer div { padding-right: 7px; }
+      .chart-footer div + div { padding-left: 7px; }
+      .chart-footer strong { font-size: 10px; }
+      .drawer { width: min(420px, 100vw); }
+    }
+    @media (max-width: 520px) {
+      .sidebar { padding: 11px 14px; gap: 9px; }
+      .brand-copy strong { font-size: 12px; letter-spacing: .08em; }
+      .brand-copy small { display: none; }
+      .brand-mark { width: 32px; height: 32px; }
+      .side-nav { flex-basis: 100%; order: 3; }
+      .side-link { min-height: 31px; font-size: 10px; padding: 5px 8px; }
+      .topbar { padding: 0 14px; }
+      .topbar-right { gap: 7px; }
+      .live-pill { display: none; }
+      .icon-button { width: 31px; height: 31px; }
+      .top-avatar { width: 30px; height: 30px; }
+      .main-content { padding-left: 12px; padding-right: 12px; }
+      .hero-section { padding-top: 23px; }
+      .hero-title-row h1 { font-size: 27px; }
+      .chapter-tag { height: 24px; font-size: 9px; }
+      .hero-lead { line-height: 1.65; }
+      .hero-chips { margin-top: 13px; }
+      .quick-date { font-size: 19px; }
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .kpi-card { min-height: 97px; }
+      .kpi-label { font-size: 9px; }
+      .kpi-value strong { font-size: 21px; }
+      .kpi-foot { font-size: 8px; }
+      .kpi-bars { display: none; }
+      .panel-head { padding: 16px 15px 10px; }
+      .chart-wrap { padding-left: 2px; padding-right: 2px; }
+      .chart-wrap canvas { height: 205px; }
+      .chart-footer { margin-left: 12px; margin-right: 12px; }
+      .structure-body { padding-left: 13px; padding-right: 13px; gap: 10px; }
+      .donut { width: 78px; height: 78px; }
+      .donut-center strong { font-size: 16px; }
+      .comm-body { padding-left: 14px; padding-right: 14px; }
+      .section-heading h2 { font-size: 24px; }
+      .lens-group { justify-content: center; gap: 10px; }
+      .lens { width: 62px; height: 62px; }
+      .lens-group .lens:nth-child(n) { margin-top: 0; }
+      .data-toolbar { margin-top: 0; }
+      .architecture-flow { flex-wrap: wrap; gap: 6px; }
+      .architecture-flow .flow-rail { min-width: 30px; }
+      .ems-loop { font-size: 8px; padding: 8px 10px; }
+      .ems-loop b { display: none; }
+      .app-footer { font-size: 7px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Inline icon sprite -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.2 2 5.8 13h5.4l-.8 9 7.8-11.5h-5.3L13.2 2Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+    <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 13h3l2.2-6 3.2 12 3-9 2.1 3H21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.5 8.5c0 5-8.5 10.3-8.5 10.3S3.5 13.5 3.5 8.5a4.6 4.6 0 0 1 8-3.2 4.6 4.6 0 0 1 9 3.2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 11.5h3l1.2-2.3 1.5 4.2 1.2-1.9h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="11" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.8v2M12 17.2v2M3.8 11h2M18.2 11h2M5.2 4.2l1.4 1.4M17.4 16.4l1.4 1.4M18.8 4.2l-1.4 1.4M6.6 16.4l-1.4 1.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7.2 18.2h10.1a3.5 3.5 0 0 0 .4-7 5.7 5.7 0 0 0-10.9-1.1 4.1 4.1 0 0 0 .4 8.1Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.5 14.2h6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 19V5M4 19h17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="m7.5 15 3-4 3 2.5 4.5-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h5M15 7h5M4 17h8M18 17h2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="7" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="15" cy="17" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-quality" viewBox="0 0 24 24"><path d="M3 14h3.5l2-5 3 10 2.5-7 1.5 2H21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4.5h16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".35"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.8 6.2a5 5 0 0 0-6.4 6.4l-4.1 4.1a2.8 2.8 0 0 0 4 4l4.1-4.1a5 5 0 0 0 6.4-6.4l-3 3-3.2-.8-.8-3.2 3-3Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 9.5a6 6 0 0 0-12 0c0 7-2 7-2 8.5h16c0-1.5-2-1.5-2-8.5ZM10 21h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3.5h12v18l-2.4-1.6-2.4 1.6-2.4-1.6-2.4 1.6-2.4-1.6V3.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 8h6M9 12h6M9 16h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m15.5 15.5 4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m5 9 7 7 7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7.5 10.5 12 15l4.5-4.5M4.5 20.5h15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 19 19 5M9 5h10v10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-dashboard" viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13.5" y="3" width="7.5" height="4.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13.5" y="11" width="7.5" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 4.5-9 4.5-9-4.5L12 3Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="m3 12 9 4.5 9-4.5M3 16.5 12 21l9-4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 10h16M10 4v16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="16.5" cy="16.5" r="2" fill="none" stroke="currentColor" stroke-width="1.4"/></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="3.5" y="13.5" width="17" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M7 7h.1M7 17h.1M11 7h6M11 17h6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-chip" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M9.5 9.5h5v5h-5z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M9 3v3.5M15 3v3.5M9 17.5V21M15 17.5V21M3 9h3.5M3 15h3.5M17.5 9H21M17.5 15H21" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 10h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-battery" viewBox="0 0 24 24"><rect x="3.5" y="7" width="15" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M21 10v4M6.5 10h7v4h-7z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+    <symbol id="i-load" viewBox="0 0 24 24"><path d="M3.5 20V9.5L12 3l8.5 6.5V20h-17Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 20v-6h4v6M15 11h2M15 14h2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-brain" viewBox="0 0 24 24"><path d="M12 4.5a3.5 3.5 0 0 0-3.5 3.5v1H8a3.5 3.5 0 0 0-3.5 3.5c0 1.5.8 2.6 2 3.2A3.5 3.5 0 0 0 12 19V4.5ZM12 4.5a3.5 3.5 0 0 1 3.5 3.5v1H16a3.5 3.5 0 0 1 3.5 3.5c0 1.5-.8 2.6-2 3.2A3.5 3.5 0 0 1 12 19V4.5Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M9 8.5h6M9 12h6M8.5 17.5h7" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".6"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M4 20c1-8 6-13 16-15-1 10-6 15-16 15Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M4 20c2-5 5-8 10-11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-12A7 7 0 0 0 5 9c0 5.8 7 12 7 12Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="9" r="2.4" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-sync" viewBox="0 0 24 24"><path d="M20 8a8 8 0 0 0-14.5-1M4 4v5h5M4 16a8 8 0 0 0 14.5 1M20 20v-5h-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7.5" ry="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4.5 6v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V6M4.5 12v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+  </svg>
+
+  <div class="app-layout">
+    <aside class="sidebar" aria-label="系统导航">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32">
+            <path d="M16 3 28 10v12L16 29 4 22V10L16 3Z" fill="none" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M10 20.5h12M16 8v8M10 13.5h12M16 16v9" fill="none" stroke="currentColor" stroke-width="1.15" opacity=".62"/>
+            <circle cx="16" cy="16" r="3.2" fill="currentColor"/>
+            <circle cx="10" cy="13.5" r="1.8" fill="currentColor" opacity=".8"/>
+            <circle cx="22" cy="13.5" r="1.8" fill="currentColor" opacity=".8"/>
+            <circle cx="10" cy="20.5" r="1.8" fill="currentColor" opacity=".8"/>
+            <circle cx="22" cy="20.5" r="1.8" fill="currentColor" opacity=".8"/>
+          </svg>
+        </span>
+        <div class="brand-copy">
+          <strong>MICROGRID <b>EMS</b></strong>
+          <small>微电网能源管理系统</small>
+        </div>
+      </div>
+
+      <button class="site-switcher" type="button" aria-label="切换场站">
+        <span class="site-symbol"><svg class="icon icon-sm"><use href="#i-grid"></use></svg></span>
+        <span class="site-copy"><b>校园微电网示范站</b><small>0.4 kV · 并网运行</small></span>
+        <svg class="icon icon-sm"><use href="#i-chevron-down"></use></svg>
+      </button>
+
+      <nav class="side-nav" aria-label="页面板块">
+        <span class="nav-eyebrow">运营中心 <b>01</b></span>
+        <a class="side-link is-active" href="#overview" data-nav="overview">
+          <svg class="icon"><use href="#i-dashboard"></use></svg><span>运行总览</span><em class="nav-count">LIVE</em>
+        </a>
+        <span class="nav-eyebrow">9.4 通信组网 <b>02</b></span>
+        <a class="side-link" href="#architecture" data-nav="architecture">
+          <svg class="icon"><use href="#i-layers"></use></svg><span>三层协同架构</span><em class="nav-count">3</em>
+        </a>
+        <a class="side-link" href="#data-matrix" data-nav="data-matrix">
+          <svg class="icon"><use href="#i-database"></use></svg><span>数据资源矩阵</span><em class="nav-count">9</em>
+        </a>
+        <span class="nav-eyebrow">能量管理 <b>03</b></span>
+        <a class="side-link" href="#energy-management" data-nav="energy-management">
+          <svg class="icon"><use href="#i-brain"></use></svg><span>核心功能矩阵</span><em class="nav-count">6</em>
+        </a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="gateway-card">
+          <div class="gateway-head"><span>通信网关 · EDGE-01</span><span class="online-dot"></span></div>
+          <div class="gateway-row"><span>节点在线</span><strong>24 / 24</strong></div>
+          <div class="gateway-row"><span>平均延迟</span><strong>82 ms</strong></div>
+          <div class="signal-bars" aria-hidden="true">
+            <i style="--h:42%"></i><i style="--h:63%"></i><i style="--h:51%"></i><i style="--h:78%"></i><i style="--h:58%"></i><i style="--h:92%"></i><i style="--h:72%"></i><i style="--h:85%"></i><i style="--h:66%"></i><i style="--h:95%"></i><i style="--h:81%"></i><i style="--h:69%"></i>
+          </div>
+        </div>
+        <div class="user-card">
+          <div class="avatar" aria-hidden="true">孙</div>
+          <div class="user-copy">
+            <b>孙元凯</b>
+            <span>202410132083</span>
+            <small>24新能源科学与工程3班</small>
+          </div>
+          <button class="user-more" type="button" aria-label="用户菜单">
+            <svg class="icon icon-sm"><use href="#i-chevron-down"></use></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main-shell">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu" type="button" aria-label="打开导航" id="mobileMenu">
+            <svg class="icon"><use href="#i-menu"></use></svg>
+          </button>
+          <div class="breadcrumb">
+            <span>能源管理系统</span>
+            <svg class="icon"><use href="#i-chevron"></use></svg>
+            <b>微电网通信组网</b>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <span class="live-pill"><i></i>数据链路正常</span>
+          <div class="clock">
+            <strong id="liveClock">--:--:--</strong>
+            <span id="liveDate">----</span>
+          </div>
+          <button class="icon-button" type="button" id="notifyButton" aria-label="查看告警">
+            <svg class="icon"><use href="#i-bell"></use></svg>
+            <span class="notify-dot"></span>
+          </button>
+          <div class="top-avatar" title="孙元凯 · 202410132083">孙</div>
+        </div>
+      </header>
+
+      <div class="notification-pop" id="notificationPop" role="dialog" aria-label="通知">
+        <h3>最新事件</h3>
+        <div class="notification-item"><span class="dot"></span><div><b>网关 EDGE-02 心跳恢复</b><span>通信链路已重新建立</span></div><time>13:18</time></div>
+        <div class="notification-item is-warn"><span class="dot"></span><div><b>储能 SOC 低于 25%</b><span>建议调整充电计划</span></div><time>12:48</time></div>
+        <div class="notification-item"><span class="dot"></span><div><b>功率预测模型已更新</b><span>超短期预测周期 15 min</span></div><time>12:30</time></div>
+      </div>
+
+      <main class="main-content">
+        <!-- ======================================================
+             OVERVIEW
+             ====================================================== -->
+        <section class="section hero-section" id="overview">
+          <div class="hero-head">
+            <div>
+              <div class="eyebrow">ENERGY MANAGEMENT SYSTEM · CHAPTER 9.4</div>
+              <div class="hero-title-row">
+                <h1>微电网通信组网</h1>
+                <span class="chapter-tag">9.4</span>
+              </div>
+              <p class="hero-lead">从就地控制到能量管理，以全链路数据贯通源、网、荷、储，让设备状态、运行趋势与调度决策在同一张能源地图上清晰可见。</p>
+              <div class="hero-chips" aria-label="数据分类">
+                <button type="button" class="hero-chip" data-jump-filter="resource"><i></i>资源 · 实时感知</button>
+                <button type="button" class="hero-chip" data-jump-filter="interaction"><i></i>互动 · 双向协同</button>
+                <button type="button" class="hero-chip" data-jump-filter="management"><i></i>管理 · 运行闭环</button>
+              </div>
+            </div>
+            <div class="hero-side">
+              <div class="quick-label">SYSTEM DAY / 系统运行日</div>
+              <div class="quick-date" id="todayDate">2026.11.19</div>
+              <div class="quick-meta"><span>并网运行</span><span>数据刷新 2.2 s</span></div>
+              <button type="button" class="btn btn-dark" id="exportButton">
+                <svg class="icon icon-sm"><use href="#i-download"></use></svg>导出运行快照
+              </button>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <article class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">系统有功负荷</span>
+                <span class="kpi-icon"><svg class="icon"><use href="#i-wave"></use></svg></span>
+              </div>
+              <div class="kpi-value"><strong id="kpiLoad">286.4</strong><span>kW</span></div>
+              <div class="kpi-foot"><span class="trend-up">↑ 3.2%</span><span>较昨日同期</span><span class="kpi-bars" aria-hidden="true"><i style="--h:30%"></i><i style="--h:55%"></i><i style="--h:44%"></i><i style="--h:66%"></i><i style="--h:52%"></i><i style="--h:82%"></i><i style="--h:73%"></i><i style="--h:94%"></i></span></div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">清洁能源占比</span>
+                <span class="kpi-icon"><svg class="icon"><use href="#i-leaf"></use></svg></span>
+              </div>
+              <div class="kpi-value"><strong id="kpiClean">68.4</strong><span>%</span></div>
+              <div class="kpi-foot"><span class="trend-up">↑ 4.6%</span><span>光伏 + 风电</span><span class="kpi-bars" aria-hidden="true"><i style="--h:23%"></i><i style="--h:29%"></i><i style="--h:48%"></i><i style="--h:52%"></i><i style="--h:64%"></i><i style="--h:73%"></i><i style="--h:82%"></i><i style="--h:88%"></i></span></div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">储能荷电状态</span>
+                <span class="kpi-icon"><svg class="icon"><use href="#i-battery"></use></svg></span>
+              </div>
+              <div class="kpi-value"><strong id="kpiSoc">62.3</strong><span>%</span></div>
+              <div class="kpi-foot"><span class="trend-warm">− 18 kW</span><span>当前充电功率</span><span class="kpi-bars" aria-hidden="true"><i style="--h:44%"></i><i style="--h:52%"></i><i style="--h:55%"></i><i style="--h:61%"></i><i style="--h:58%"></i><i style="--h:67%"></i><i style="--h:73%"></i><i style="--h:78%"></i></span></div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">通信节点在线率</span>
+                <span class="kpi-icon"><svg class="icon"><use href="#i-sync"></use></svg></span>
+              </div>
+              <div class="kpi-value"><strong id="kpiOnline">100</strong><span>%</span></div>
+              <div class="kpi-foot"><span class="trend-up">● 24 / 24</span><span>节点稳定在线</span><span class="kpi-bars" aria-hidden="true"><i style="--h:88%"></i><i style="--h:88%"></i><i style="--h:88%"></i><i style="--h:88%"></i><i style="--h:88%"></i><i style="--h:88%"></i><i style="--h:88%"></i><i style="--h:88%"></i></span></div>
+            </article>
+          </div>
+
+          <div class="overview-grid">
+            <article class="panel chart-panel">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-kicker">POWER BALANCE / REAL-TIME</div>
+                  <h2>源荷功率曲线</h2>
+                  <p class="sub">过去 45 个采样点的实时功率变化</p>
+                </div>
+                <span class="live-pill"><i></i>实时刷新</span>
+              </div>
+              <div class="chart-wrap"><canvas id="powerChart" aria-label="光伏、风电与负荷实时功率曲线"></canvas></div>
+              <div class="chart-legend" style="padding: 0 21px 2px;">
+                <span><i style="--lc:#d9a03b"></i>光伏出力</span>
+                <span><i style="--lc:#319a81"></i>风电出力</span>
+                <span><i style="--lc:#3d78a7"></i>负荷功率</span>
+                <span class="chart-unit">单位：kW</span>
+              </div>
+              <div class="chart-footer">
+                <div><span>当前光伏</span><strong id="chartPv">156.8 kW</strong></div>
+                <div><span>当前风电</span><strong id="chartWind">79.2 kW</strong></div>
+                <div><span>当前负荷</span><strong id="chartLoad">286.4 kW</strong></div>
+                <div><span>并网交换</span><strong id="chartGrid">82.0 kW</strong></div>
+              </div>
+            </article>
+
+            <div class="overview-side">
+              <article class="panel side-card">
+                <div class="panel-head" style="padding-bottom: 7px;">
+                  <div><div class="panel-kicker">ENERGY MIX / TODAY</div><h2>能量结构</h2></div>
+                  <span class="chart-unit">实时占比</span>
+                </div>
+                <div class="structure-body">
+                  <div class="donut" id="energyDonut">
+                    <div class="donut-center"><strong id="donutClean">68.4%</strong><span>清洁能源</span></div>
+                  </div>
+                  <div class="energy-legend">
+                    <div class="energy-row"><i style="--ec:#209f77"></i>光伏<span style="margin-left:auto"></span><strong id="mixPv">54%</strong><span id="mixPvKw">156.8</span></div>
+                    <div class="energy-row"><i style="--ec:#d99835"></i>风电<span style="margin-left:auto"></span><strong id="mixWind">16%</strong><span id="mixWindKw">46.2</span></div>
+                    <div class="energy-row"><i style="--ec:#3a86c7"></i>电网<span style="margin-left:auto"></span><strong id="mixGrid">22%</strong><span id="mixGridKw">62.8</span></div>
+                    <div class="energy-row"><i style="--ec:#b7dd76"></i>储能<span style="margin-left:auto"></span><strong id="mixBattery">8%</strong><span id="mixBatteryKw">22.8</span></div>
+                  </div>
+                </div>
+              </article>
+              <article class="panel side-card">
+                <div class="panel-head" style="padding-bottom: 8px;">
+                  <div><div class="panel-kicker">LINK HEALTH / EDGE NETWORK</div><h2>通信链路健康度</h2></div>
+                  <span class="comm-status-row" style="margin-top:0"><i class="online-dot"></i>正常</span>
+                </div>
+                <div class="comm-body">
+                  <div class="comm-health">
+                    <div class="health-orbit"><b>99.8</b></div>
+                    <div class="comm-health-copy"><strong>数据链路运行平稳</strong><span>24 / 24 节点在线 · 丢包率 0.02%</span></div>
+                  </div>
+                  <div class="comm-metrics">
+                    <div><span>平均延迟</span><strong>82 ms</strong></div>
+                    <div><span>对时偏差</span><strong>3 ms</strong></div>
+                    <div><span>采集周期</span><strong>1 s</strong></div>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======================================================
+             ARCHITECTURE
+             ====================================================== -->
+        <div class="section-line"></div>
+        <section class="section" id="architecture" aria-labelledby="architectureTitle">
+          <div class="section-heading">
+            <div>
+              <div class="eyebrow">9.4 / CONTROL HIERARCHY</div>
+              <h2 id="architectureTitle">三层协同架构<span class="section-index">01 — 03</span></h2>
+              <p>就地控制层负责底层执行，监控层承上启下汇聚状态，能量管理层以算法与模型统筹全局，让数据上行、指令下行形成闭环。</p>
+            </div>
+            <div class="count-badge"><strong>3</strong><span>个层级<br>协同运行</span></div>
+          </div>
+
+          <div class="architecture-grid">
+            <article class="layer-card" tabindex="0" role="button" data-kind="layer" data-id="field">
+              <div class="layer-top">
+                <span class="layer-number">01</span>
+                <span class="layer-icon"><svg class="icon"><use href="#i-chip"></use></svg></span>
+                <span class="layer-en">FIELD CONTROL</span>
+              </div>
+              <h3>就地控制层</h3>
+              <p>微电网的底层执行单元，负责设备的实时数据采集、状态监测与毫秒级控制，是保障系统稳定运行的物理基础。</p>
+              <div class="layer-tags"><span>实时采集</span><span>状态监测</span><span>毫秒级控制</span></div>
+              <div class="layer-footer"><span>边缘控制响应</span><strong>&lt; 10 ms</strong></div>
+            </article>
+
+            <article class="layer-card" tabindex="0" role="button" data-kind="layer" data-id="supervision">
+              <div class="layer-top">
+                <span class="layer-number">02</span>
+                <span class="layer-icon"><svg class="icon"><use href="#i-server"></use></svg></span>
+                <span class="layer-en">SUPERVISION</span>
+              </div>
+              <h3>监控层</h3>
+              <p>承上启下的核心枢纽，汇聚全区域实时数据，实现运行状态可视化监控、异常告警与远程指令下发，确保系统可控。</p>
+              <div class="layer-tags"><span>数据汇聚</span><span>可视监控</span><span>远程指令</span></div>
+              <div class="layer-footer"><span>接入数据点</span><strong>1,286</strong></div>
+            </article>
+
+            <article class="layer-card" tabindex="0" role="button" data-kind="layer" data-id="energy">
+              <div class="layer-top">
+                <span class="layer-number">03</span>
+                <span class="layer-icon"><svg class="icon"><use href="#i-brain"></use></svg></span>
+                <span class="layer-en">ENERGY MANAGEMENT</span>
+              </div>
+              <h3>能量管理层</h3>
+              <p>微电网的“智慧大脑”，基于大数据与算法模型进行全局优化，统筹能源调度策略，实现经济高效运行。</p>
+              <div class="layer-tags"><span>大数据</span><span>算法模型</span><span>全局优化</span></div>
+              <div class="layer-footer"><span>优化调度周期</span><strong>15 min</strong></div>
+            </article>
+          </div>
+
+          <div class="architecture-flow">
+            <span>现场数据上行 · 感知</span>
+            <div class="flow-rail" aria-hidden="true"></div>
+            <strong>监控汇聚 · 分析</strong>
+            <div class="flow-rail" aria-hidden="true"></div>
+            <span>策略指令下行 · 优化</span>
+          </div>
+        </section>
+
+        <!-- ======================================================
+             DATA MATRIX
+             ====================================================== -->
+        <div class="section-line"></div>
+        <section class="section" id="data-matrix" aria-labelledby="dataTitle">
+          <div class="section-heading">
+            <div>
+              <div class="eyebrow">9.4 / DATA FABRIC</div>
+              <h2 id="dataTitle">通信数据资源矩阵<span class="section-index">资源 · 互动 · 管理</span></h2>
+              <p>九类数据覆盖设备状态、运行环境、控制互动与经营闭环，形成微电网通信组网的完整数据底座。</p>
+            </div>
+            <div class="lens-group" aria-label="数据分类筛选">
+              <button type="button" class="lens" data-filter="resource" aria-pressed="false"><strong>资源</strong><span>RESOURCE</span></button>
+              <button type="button" class="lens" data-filter="interaction" aria-pressed="false"><strong>互动</strong><span>INTERACTION</span></button>
+              <button type="button" class="lens" data-filter="management" aria-pressed="false"><strong>管理</strong><span>MANAGEMENT</span></button>
+            </div>
+          </div>
+
+          <div class="data-toolbar">
+            <div class="data-toolbar-left">
+              <span class="view-count"><b id="visibleCount">9</b> / 9 类数据</span>
+              <button type="button" class="clear-filter" id="clearFilter" hidden>清除筛选</button>
+            </div>
+            <label class="search-box">
+              <svg class="icon"><use href="#i-search"></use></svg>
+              <span class="sr-only">搜索数据</span>
+              <input id="dataSearch" type="search" placeholder="搜索数据类型、参数或关键词…" autocomplete="off">
+            </label>
+          </div>
+
+          <div class="data-grid" id="dataGrid">
+            <div class="data-column" data-group="resource" style="--group-color:#209f77">
+              <div class="group-head"><span class="group-title">资源</span><span class="group-en">RESOURCE</span><span class="group-count">03</span></div>
+              <p class="group-desc">感知设备与环境的实时状态</p>
+
+              <article class="data-card" tabindex="0" role="button" data-kind="data" data-id="realtime" data-group="resource" style="--card-color:#209f77">
+                <div class="data-card-top">
+                  <span class="data-card-icon"><svg class="icon"><use href="#i-wave"></use></svg></span>
+                  <span class="data-index">01 / 09</span>
+                </div>
+                <h3>实时运行数据</h3>
+                <p class="data-desc">采集电压、电流、功率等实时遥测信息，精准反映设备即时工况与电网动态。</p>
+                <div class="data-tags"><span>电压</span><span>电流</span><span>功率</span></div>
+                <div class="data-card-foot"><span class="dot"></span><span>遥测链路在线</span><span>刷新 1 s</span></div>
+              </article>
+
+              <article class="data-card" tabindex="0" role="button" data-kind="data" data-id="diagnosis" data-group="resource" style="--card-color:#3b9b7a">
+                <div class="data-card-top">
+                  <span class="data-card-icon"><svg class="icon"><use href="#i-heart"></use></svg></span>
+                  <span class="data-index">02 / 09</span>
+                </div>
+                <h3>状态诊断数据</h3>
+                <p class="data-desc">传输设备温度、绝缘状态等关键参量，为设备故障预警与预测性维护提供依据。</p>
+                <div class="data-tags"><span>温度</span><span>绝缘</span><span>健康度</span></div>
+                <div class="data-card-foot"><span class="dot"></span><span>诊断引擎在线</span><span>边缘计算</span></div>
+              </article>
+
+              <article class="data-card" tabindex="0" role="button" data-kind="data" data-id="environment" data-group="resource" style="--card-color:#c68d32">
+                <div class="data-card-top">
+                  <span class="data-card-icon"><svg class="icon"><use href="#i-sun"></use></svg></span>
+                  <span class="data-index">03 / 09</span>
+                </div>
+                <h3>环境辅助数据</h3>
+                <p class="data-desc">监测光照强度、风速风向、环境温湿度，适配光伏、风电等新能源发电调度策略。</p>
+                <div class="data-tags"><span>光照</span><span>风速</span><span>温湿度</span></div>
+                <div class="data-card-foot"><span class="dot"></span><span>环境站在线</span><span>分钟级</span></div>
+              </article>
+            </div>
+
+            <div class="data-column" data-group="interaction" style="--group-color:#3a86c7">
+              <div class="group-head"><span class="group-title">互动</span><span class="group-en">INTERACTION</span><span class="group-count">03</span></div>
+              <p class="group-desc">从数据洞察到控制指令的双向协同</p>
+
+              <article class="data-card" tabindex="0" role="button" data-kind="data" data-id="trend" data-group="interaction" style="--card-color:#3a86c7">
+                <div class="data-card-top">
+                  <span class="data-card-icon"><svg class="icon"><use href="#i-chart"></use></svg></span>
+                  <span class="data-index">04 / 09</span>
+                </div>
+                <h3>趋势分析数据</h3>
+                <p class="data-desc">存储历史曲线、积分电量及负荷数据，支撑能效分析、负荷预测与电网优化决策。</p>
+                <div class="data-tags"><span>历史曲线</span><span>积分电量</span><span>负荷</span></div>
+                <div class="data-card-foot"><span class="dot"></span><span>时序库在线</span><span>12 个月</span></div>
+              </article>
+
+              <article class="data-card" tabindex="0" role="button" data-kind="data" data-id="control" data-group="interaction" style="--card-color:#6b78b3">
+                <div class="data-card-top">
+                  <span class="data-card-icon"><svg class="icon"><use href="#i-sliders"></use></svg></span>
+                  <span class="data-index">05 / 09</span>
+                </div>
+                <h3>控制与同步指令</h3>
+                <p class="data-desc">下发设备调节、模式切换等控制指令，同步系统时钟，保障全网运行一致性。</p>
+                <div class="data-tags"><span>调节</span><span>模式切换</span><span>对时</span></div>
+                <div class="data-card-foot"><span class="dot"></span><span>指令通道正常</span><span>双向通信</span></div>
+              </article>
+
+              <article class="data-card" tabindex="0" role="button" data-kind="data" data-id="quality" data-group="interaction" style="--card-color:#2f9a96">
+                <div class="data-card-top">
+                  <span class="data-card-icon"><svg class="icon"><use href="#i-quality"></use></svg></span>
+                  <span class="data-index">06 / 09</span>
+                </div>
+                <h3>电能质量监测</h3>
+                <p class="data-desc">实时监测谐波含量、电压波动与闪变等指标，确保微电网供电稳定性与合规性。</p>
+                <div class="data-tags"><span>谐波</span><span>电压波动</span><span>闪变</span></div>
+                <div class="data-card-foot"><span class="dot"></span><span>质量监测在线</span><span>3 s</span></div>
+              </article>
+            </div>
+
+            <div class="data-column" data-group="management" style="--group-color:#d99835">
+              <div class="group-head"><span class="group-title">管理</span><span class="group-en">MANAGEMENT</span><span class="group-count">03</span></div>
+              <p class="group-desc">运行闭环、资产管理与经营决策</p>
+
+              <article class="data-card" tabindex="0" role="button" data-kind="data" data-id="maintenance" data-group="management" style="--card-color:#a37a44">
+                <div class="data-card-top">
+                  <span class="data-card-icon"><svg class="icon"><use href="#i-wrench"></use></svg></span>
+                  <span class="data-index">07 / 09</span>
+                </div>
+                <h3>运维管理数据</h3>
+                <p class="data-desc">记录设备巡检、故障维修、保养计划及备件管理信息，提升资产管理效率。</p>
+                <div class="data-tags"><span>巡检</span><span>维修</span><span>备件</span></div>
+                <div class="data-card-foot"><span class="dot"></span><span>资产台账在线</span><span>工单 1</span></div>
+              </article>
+
+              <article class="data-card" tabindex="0" role="button" data-kind="data" data-id="alarm" data-group="management" style="--card-color:#cf6d55">
+                <div class="data-card-top">
+                  <span class="data-card-icon"><svg class="icon"><use href="#i-bell"></use></svg></span>
+                  <span class="data-index">08 / 09</span>
+                </div>
+                <h3>告警事件数据</h3>
+                <p class="data-desc">实时上报故障告警、越限事件及系统异常，触发快速响应与故障追溯机制。</p>
+                <div class="data-tags"><span>故障告警</span><span>越限</span><span>追溯</span></div>
+                <div class="data-card-foot"><span class="dot"></span><span>告警中心在线</span><span>2 条待处理</span></div>
+              </article>
+
+              <article class="data-card" tabindex="0" role="button" data-kind="data" data-id="settlement" data-group="management" style="--card-color:#b88735">
+                <div class="data-card-top">
+                  <span class="data-card-icon"><svg class="icon"><use href="#i-receipt"></use></svg></span>
+                  <span class="data-index">09 / 09</span>
+                </div>
+                <h3>计量结算数据</h3>
+                <p class="data-desc">采集分时电量、功率因数及电费计量数据，支撑电费结算、分摊与能效考核。</p>
+                <div class="data-tags"><span>分时电量</span><span>功率因数</span><span>电费</span></div>
+                <div class="data-card-foot"><span class="dot"></span><span>计量链路在线</span><span>月度结算</span></div>
+              </article>
+            </div>
+          </div>
+          <div class="no-data" id="noData" hidden><strong>没有匹配的数据类型</strong>请更换关键词，或点击“清除筛选”查看全部 9 类数据。</div>
+        </section>
+
+        <!-- ======================================================
+             ENERGY MANAGEMENT
+             ====================================================== -->
+        <div class="section-line"></div>
+        <section class="section" id="energy-management" aria-labelledby="energyTitle">
+          <div class="section-heading">
+            <div>
+              <div class="eyebrow">EMS CORE / OPTIMIZATION LOOP</div>
+              <h2 id="energyTitle">能量管理层核心功能矩阵</h2>
+              <p>以预测为起点、以优化调度为落点，将数据转化为可执行的运行策略，持续平衡微电网的经济性、可靠性与低碳目标。</p>
+            </div>
+            <div class="count-badge"><strong>6</strong><span>项核心能力<br>数据驱动闭环</span></div>
+          </div>
+
+          <div class="ems-loop" aria-label="能量管理闭环">
+            <span>发电预测</span><i></i><span>负荷预测</span><i></i><span>发电计划</span><i></i><span>电源管理</span><i></i><span>分析评估</span><i></i><span>优化调度</span>
+            <b>CLOSED LOOP · 15 min</b>
+          </div>
+
+          <div class="function-grid">
+            <article class="function-card" tabindex="0" role="button" data-kind="feature" data-id="generation-forecast" style="--accent:#d99a35">
+              <div class="function-head">
+                <span class="function-icon"><svg class="icon"><use href="#i-sun"></use></svg></span>
+                <span class="function-kind">FORECAST / 01</span>
+                <span class="function-status"><i></i>运行中</span>
+              </div>
+              <h3>发电预测</h3>
+              <p class="function-desc">基于气象数据与历史出力模型，精准预测风光等新能源出力，为调度提供依据。</p>
+              <div class="function-meta"><span>明日预测电量</span><strong>1,920 kWh</strong><em>置信度 92%</em></div>
+              <span class="function-arrow"><svg class="icon"><use href="#i-arrow"></use></svg></span>
+            </article>
+
+            <article class="function-card" tabindex="0" role="button" data-kind="feature" data-id="load-forecast" style="--accent:#3a86c7">
+              <div class="function-head">
+                <span class="function-icon"><svg class="icon"><use href="#i-chart"></use></svg></span>
+                <span class="function-kind">FORECAST / 02</span>
+                <span class="function-status"><i></i>运行中</span>
+              </div>
+              <h3>负荷预测</h3>
+              <p class="function-desc">结合用户行为与场景特征，智能预测用电负荷峰谷，规避供电缺口与资源浪费。</p>
+              <div class="function-meta"><span>晚高峰预测</span><strong>348 kW</strong><em>MAPE 3.8%</em></div>
+              <span class="function-arrow"><svg class="icon"><use href="#i-arrow"></use></svg></span>
+            </article>
+
+            <article class="function-card" tabindex="0" role="button" data-kind="feature" data-id="generation-plan" style="--accent:#7d78be">
+              <div class="function-head">
+                <span class="function-icon"><svg class="icon"><use href="#i-calendar"></use></svg></span>
+                <span class="function-kind">PLAN / 03</span>
+                <span class="function-status"><i></i>已发布</span>
+              </div>
+              <h3>发电计划</h3>
+              <p class="function-desc">制定多时段发电方案，平衡供需关系，保障微电网运行的经济性与稳定性。</p>
+              <div class="function-meta"><span>明日计划电量</span><strong>4,200 kWh</strong><em>24 h</em></div>
+              <span class="function-arrow"><svg class="icon"><use href="#i-arrow"></use></svg></span>
+            </article>
+
+            <article class="function-card" tabindex="0" role="button" data-kind="feature" data-id="source-management" style="--accent:#209f77">
+              <div class="function-head">
+                <span class="function-icon"><svg class="icon"><use href="#i-battery"></use></svg></span>
+                <span class="function-kind">CONTROL / 04</span>
+                <span class="function-status"><i></i>协同中</span>
+              </div>
+              <h3>电源管理</h3>
+              <p class="function-desc">统筹储能、柴油发电机等多源电源协同运行，优化充放电策略，提升供电可靠性。</p>
+              <div class="function-meta"><span>储能可调容量</span><strong>160 kW</strong><em>柴发备用 120 kW</em></div>
+              <span class="function-arrow"><svg class="icon"><use href="#i-arrow"></use></svg></span>
+            </article>
+
+            <article class="function-card" tabindex="0" role="button" data-kind="feature" data-id="analytics" style="--accent:#5b8d70">
+              <div class="function-head">
+                <span class="function-icon"><svg class="icon"><use href="#i-target"></use></svg></span>
+                <span class="function-kind">EVALUATION / 05</span>
+                <span class="function-status"><i></i>已更新</span>
+              </div>
+              <h3>统计分析与评估</h3>
+              <p class="function-desc">多维度分析运行数据，评估能效与设备状态，为运维决策和系统升级提供支撑。</p>
+              <div class="function-meta"><span>综合能效评分</span><strong>91</strong><em>设备健康 94%</em></div>
+              <span class="function-arrow"><svg class="icon"><use href="#i-arrow"></use></svg></span>
+            </article>
+
+            <article class="function-card" tabindex="0" role="button" data-kind="feature" data-id="optimization" style="--accent:#b58a31">
+              <div class="function-head">
+                <span class="function-icon"><svg class="icon"><use href="#i-sync"></use></svg></span>
+                <span class="function-kind">OPTIMIZE / 06</span>
+                <span class="function-status"><i></i>滚动优化</span>
+              </div>
+              <h3>优化调度</h3>
+              <p class="function-desc">基于实时数据动态调整能源分配，实现削峰填谷与节能减排，最大化经济效益。</p>
+              <div class="function-meta"><span>今日节能贡献</span><strong>6.8%</strong><em>碳减排 2.1 t</em></div>
+              <span class="function-arrow"><svg class="icon"><use href="#i-arrow"></use></svg></span>
+            </article>
+          </div>
+
+          <div class="section-note">
+            <svg class="icon icon-sm"><use href="#i-brain"></use></svg>
+            <div><strong>能量管理层</strong>是微电网的“智慧大脑”：以预测—计划—管理—评估—调度闭环，将分散的设备数据转化为全局优化的运行策略。</div>
+          </div>
+        </section>
+
+        <footer class="app-footer">
+          <span>MICROGRID EMS · 9.4 微电网通信组网</span>
+          <span>内容来源：课堂讲义《微电网通信组网》 · 演示数据</span>
+          <span class="footer-credit">课程设计 · 孙元凯 · 202410132083 · 24新能源科学与工程3班</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <!-- Drawer -->
+  <div class="drawer-backdrop" id="drawerBackdrop" aria-hidden="true"></div>
+  <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true">
+    <div class="drawer-head">
+      <span class="drawer-kicker" id="drawerKicker">DATA / 资源</span>
+      <h2 id="drawerTitle">实时运行数据</h2>
+      <p id="drawerDesc"></p>
+      <button class="drawer-close" type="button" id="drawerClose" aria-label="关闭详情">
+        <svg class="icon"><use href="#i-close"></use></svg>
+      </button>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-block">
+        <h3>典型实时指标</h3>
+        <div class="drawer-stats" id="drawerStats"></div>
+      </div>
+      <div class="drawer-block">
+        <h3>数据流转链路</h3>
+        <div class="drawer-chain" id="drawerChain"></div>
+      </div>
+      <div class="drawer-block">
+        <h3>关联模块</h3>
+        <div class="drawer-tags" id="drawerTags"></div>
+        <div class="drawer-note">该视图用于展示微电网通信组网数据与能量管理界面的联动关系，指标为课堂演示数据。</div>
+        <button class="drawer-cta" type="button" id="drawerCta">查看关联数据 <svg class="icon icon-sm"><use href="#i-arrow"></use></svg></button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const $ = (selector, root = document) => root.querySelector(selector);
+      const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+      const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+      /* ------------------------------------------------------------
+         Live clock
+         ------------------------------------------------------------ */
+      const clock = $('#liveClock');
+      const liveDate = $('#liveDate');
+      const todayDate = $('#todayDate');
+      const pad = (n) => String(n).padStart(2, '0');
+      function tickClock() {
+        const now = new Date();
+        clock.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        const week = ['日', '一', '二', '三', '四', '五', '六'][now.getDay()];
+        liveDate.textContent = `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())} · 周${week}`;
+        todayDate.textContent = `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())}`;
+      }
+      tickClock();
+      window.setInterval(tickClock, 1000);
+
+      /* ------------------------------------------------------------
+         Power chart
+         ------------------------------------------------------------ */
+      const canvas = $('#powerChart');
+      const ctx = canvas.getContext('2d');
+      const chart = { pv: [], wind: [], load: [], grid: [], values: {} };
+      let chartTick = 0;
+
+      function seedChart() {
+        for (let i = -42; i <= 0; i++) {
+          const phase = i * .19;
+          chart.pv.push(155 + Math.sin(phase) * 31 + Math.sin(phase * .37) * 8);
+          chart.wind.push(76 + Math.sin(phase * .73 + 1.4) * 14);
+          chart.load.push(286 + Math.sin(phase * .48 + .5) * 22 + Math.cos(phase * .17) * 7);
+          chart.grid.push(75 + Math.sin(phase * .4 + .8) * 16);
+        }
+      }
+
+      function resizeCanvas() {
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        if (!rect.width) return;
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        drawChart();
+      }
+
+      function drawChart() {
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        if (!w) return;
+        ctx.clearRect(0, 0, w, h);
+        const pad = { l: 32, r: 12, t: 14, b: 22 };
+        const cw = w - pad.l - pad.r;
+        const ch = h - pad.t - pad.b;
+        const all = chart.pv.concat(chart.wind, chart.load, chart.grid);
+        const max = Math.ceil((Math.max(...all) + 30) / 50) * 50;
+        const min = 0;
+        ctx.font = '8px "Cascadia Code", Consolas, monospace';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        for (let i = 0; i <= 4; i++) {
+          const y = pad.t + ch * i / 4;
+          const value = Math.round(max - (max - min) * i / 4);
+          ctx.strokeStyle = '#edf2ed';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(pad.l, y);
+          ctx.lineTo(w - pad.r, y);
+          ctx.stroke();
+          ctx.fillStyle = '#a5b4ab';
+          ctx.fillText(String(value), pad.l - 8, y);
+        }
+        const x = (i) => pad.l + (i / (chart.pv.length - 1)) * cw;
+        const y = (v) => pad.t + ch - (v - min) / (max - min) * ch;
+
+        const fill = ctx.createLinearGradient(0, pad.t, 0, pad.t + ch);
+        fill.addColorStop(0, 'rgba(217, 160, 59, .12)');
+        fill.addColorStop(1, 'rgba(217, 160, 59, 0)');
+
+        // PV area
+        ctx.beginPath();
+        chart.pv.forEach((v, i) => i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v)));
+        ctx.lineTo(x(chart.pv.length - 1), pad.t + ch);
+        ctx.lineTo(x(0), pad.t + ch);
+        ctx.closePath();
+        ctx.fillStyle = fill;
+        ctx.fill();
+
+        const lines = [
+          { data: chart.pv, color: '#d9a03b', width: 1.6 },
+          { data: chart.wind, color: '#319a81', width: 1.5 },
+          { data: chart.load, color: '#3d78a7', width: 1.45 }
+        ];
+        lines.forEach((line) => {
+          ctx.beginPath();
+          line.data.forEach((v, i) => i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v)));
+          ctx.strokeStyle = line.color;
+          ctx.lineWidth = line.width;
+          ctx.lineJoin = 'round';
+          ctx.lineCap = 'round';
+          ctx.stroke();
+        });
+
+        // Current labels
+        ctx.textAlign = 'left';
+        const latest = { pv: chart.pv[chart.pv.length - 1], wind: chart.wind[chart.wind.length - 1], load: chart.load[chart.load.length - 1] };
+        const labels = [
+          { value: latest.pv, color: '#c18b29' },
+          { value: latest.wind, color: '#227e6b' },
+          { value: latest.load, color: '#306b9c' }
+        ];
+        labels.forEach((item, i) => {
+          const yy = y(item.value);
+          ctx.fillStyle = item.color;
+          ctx.fillText(`${Math.round(item.value)}`, Math.min(w - 27, x(chart.pv.length - 1) + 4), clamp(yy, 8, h - 10));
+        });
+
+        ctx.fillStyle = '#a7b4ac';
+        ctx.textAlign = 'center';
+        const times = ['-40m', '-30m', '-20m', '-10m', '现在'];
+        [0, 10, 20, 30, 42].forEach((idx, i) => {
+          ctx.fillText(times[i], x(idx), h - 5);
+        });
+      }
+
+      seedChart();
+      window.addEventListener('resize', resizeCanvas);
+      if (window.ResizeObserver) {
+        new ResizeObserver(resizeCanvas).observe(canvas);
+      } else {
+        window.setTimeout(resizeCanvas, 100);
+      }
+
+      /* ------------------------------------------------------------
+         Data simulation / KPI
+         ------------------------------------------------------------ */
+      const kpiLoad = $('#kpiLoad');
+      const kpiClean = $('#kpiClean');
+      const kpiSoc = $('#kpiSoc');
+      const chartPv = $('#chartPv');
+      const chartWind = $('#chartWind');
+      const chartLoad = $('#chartLoad');
+      const chartGrid = $('#chartGrid');
+      const donutClean = $('#donutClean');
+      const donut = $('#energyDonut');
+      let soc = 62.3;
+
+      function updateReadouts() {
+        chartTick++;
+        const pv = clamp(155 + Math.sin(chartTick * .23) * 30 + Math.sin(chartTick * .061) * 9, 60, 230);
+        const wind = clamp(76 + Math.sin(chartTick * .17 + 1.4) * 14, 15, 120);
+        const load = clamp(286 + Math.sin(chartTick * .12 + .5) * 22, 200, 360);
+        const battery = clamp(18 + Math.sin(chartTick * .14) * 9, 0, 45);
+        const grid = Math.max(0, load - pv - wind - battery);
+        chart.pv.push(pv); chart.pv.shift();
+        chart.wind.push(wind); chart.wind.shift();
+        chart.load.push(load); chart.load.shift();
+        chart.grid.push(grid); chart.grid.shift();
+        chart.values = { pv, wind, load, battery, grid };
+        kpiLoad.textContent = load.toFixed(1);
+        const clean = clamp((pv + wind) / load * 100, 0, 95);
+        kpiClean.textContent = clean.toFixed(1);
+        chartPv.textContent = `${pv.toFixed(1)} kW`;
+        chartWind.textContent = `${wind.toFixed(1)} kW`;
+        chartLoad.textContent = `${load.toFixed(1)} kW`;
+        chartGrid.textContent = `${grid.toFixed(1)} kW`;
+        donutClean.textContent = `${clean.toFixed(1)}%`;
+        $('#mixPvKw').textContent = pv.toFixed(1);
+        $('#mixWindKw').textContent = wind.toFixed(1);
+        $('#mixGridKw').textContent = grid.toFixed(1);
+        $('#mixBatteryKw').textContent = battery.toFixed(1);
+        const total = pv + wind + grid + battery;
+        const pPv = Math.round(pv / total * 100);
+        const pWind = Math.round(wind / total * 100);
+        const pGrid = Math.round(grid / total * 100);
+        const pBat = Math.max(0, 100 - pPv - pWind - pGrid);
+        $('#mixPv').textContent = pPv + '%';
+        $('#mixWind').textContent = pWind + '%';
+        $('#mixGrid').textContent = pGrid + '%';
+        $('#mixBattery').textContent = pBat + '%';
+        donut.style.background = `conic-gradient(#209f77 0 ${pPv}%, #d99835 ${pPv}% ${pPv + pWind}%, #3a86c7 ${pPv + pWind}% ${pPv + pWind + pGrid}%, #b7dd76 ${pPv + pWind + pGrid}% 100%)`;
+        soc = clamp(soc + (Math.random() * .12 - .05), 20, 90);
+        kpiSoc.textContent = soc.toFixed(1);
+        drawChart();
+      }
+      window.setInterval(updateReadouts, 2200);
+      window.setTimeout(updateReadouts, 300);
+
+      /* ------------------------------------------------------------
+         Navigation active state
+         ------------------------------------------------------------ */
+      const sections = ['overview', 'architecture', 'data-matrix', 'energy-management'];
+      const sideLinks = $$('.side-link');
+      const observer = new IntersectionObserver((entries) => {
+        const visible = entries.filter(e => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible) return;
+        const id = visible.target.id;
+        sideLinks.forEach((a) => a.classList.toggle('is-active', a.getAttribute('href') === `#${id}` || (id === 'architecture' && a.getAttribute('href') === '#architecture')));
+      }, { rootMargin: '-18% 0px -65% 0px', threshold: [0.08, 0.25, 0.5] });
+      sections.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) observer.observe(el);
+      });
+
+      /* ------------------------------------------------------------
+         Data filter / search
+         ------------------------------------------------------------ */
+      let activeFilter = 'all';
+      const dataCards = $$('.data-card');
+      const dataColumns = $$('.data-column');
+      const lensButtons = $$('.lens');
+      const search = $('#dataSearch');
+      const clearFilter = $('#clearFilter');
+      const visibleCount = $('#visibleCount');
+      const noData = $('#noData');
+
+      function applyFilter() {
+        let count = 0;
+        dataColumns.forEach((column) => {
+          const group = column.dataset.group;
+          const groupVisible = activeFilter === 'all' || activeFilter === group;
+          let columnCount = 0;
+          $$('.data-card', column).forEach((card) => {
+            const query = search.value.trim().toLowerCase();
+            const matchesQuery = !query || card.textContent.toLowerCase().includes(query);
+            const show = groupVisible && matchesQuery;
+            card.hidden = !show;
+            if (show) columnCount++;
+          });
+          column.hidden = columnCount === 0;
+          count += columnCount;
+        });
+        visibleCount.textContent = count;
+        noData.hidden = count !== 0;
+        clearFilter.hidden = activeFilter === 'all' && !search.value.trim();
+        lensButtons.forEach((btn) => {
+          const active = btn.dataset.filter === activeFilter;
+          btn.classList.toggle('is-active', active);
+          btn.setAttribute('aria-pressed', String(active));
+        });
+      }
+
+      lensButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          activeFilter = activeFilter === button.dataset.filter ? 'all' : button.dataset.filter;
+          applyFilter();
+          if (activeFilter !== 'all') {
+            document.getElementById('data-matrix').scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+      search.addEventListener('input', applyFilter);
+      clearFilter.addEventListener('click', () => {
+        activeFilter = 'all';
+        search.value = '';
+        applyFilter();
+      });
+      search.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          search.value = '';
+          activeFilter = 'all';
+          applyFilter();
+        }
+      });
+
+      // Quick category chip -> jump to data matrix and pre-filter
+      $$('[data-jump-filter]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const group = button.dataset.jumpFilter;
+          activeFilter = group;
+          search.value = '';
+          applyFilter();
+          document.getElementById('data-matrix').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+
+      document.getElementById('dataGrid').addEventListener('click', (event) => {
+        const card = event.target.closest('.data-card');
+        if (card) openDataDrawer(card);
+      });
+      document.getElementById('dataGrid').addEventListener('keydown', (event) => {
+        if (!['Enter', ' '].includes(event.key)) return;
+        const card = event.target.closest('.data-card');
+        if (!card) return;
+        event.preventDefault();
+        openDataDrawer(card);
+      });
+
+      /* ------------------------------------------------------------
+         Drawer content maps
+         ------------------------------------------------------------ */
+      const DATA_DETAILS = {
+        realtime: {
+          kicker: '资源 / RESOURCE · 01',
+          stats: [['母线电压', '400.2 V'], ['总有功', '286.4 kW'], ['系统频率', '50.01 Hz'], ['采样延迟', '82 ms']],
+          chain: ['现场设备', '边缘网关', '实时数据库', '监控大屏'],
+          tags: ['遥测', '秒级刷新', '边缘采集', '实时库']
+        },
+        diagnosis: {
+          kicker: '资源 / RESOURCE · 02',
+          stats: [['设备温度', '42.6 °C'], ['绝缘电阻', '22.4 MΩ'], ['健康评分', '92'], ['设备预警', '0']],
+          chain: ['温度 / 绝缘传感器', '边缘诊断引擎', '设备健康档案', '运维中心'],
+          tags: ['预测性维护', '健康评估', '阈值监测']
+        },
+        environment: {
+          kicker: '资源 / RESOURCE · 03',
+          stats: [['光照强度', '780 W/m²'], ['风速', '5.6 m/s'], ['环境温度', '26.4 °C'], ['相对湿度', '58%']],
+          chain: ['气象站', '环境采集器', '新能源预测模型', '调度策略'],
+          tags: ['光照', '风速风向', '温湿度', '气象辅助']
+        },
+        trend: {
+          kicker: '互动 / INTERACTION · 04',
+          stats: [['今日电量', '3,842 kWh'], ['峰值负荷', '342 kW'], ['采样点', '86,000+'], ['存储周期', '12 个月']],
+          chain: ['实时数据', '时序数据库', '趋势分析', '预测与决策'],
+          tags: ['历史曲线', '积分电量', '负荷预测', '能效分析']
+        },
+        control: {
+          kicker: '互动 / INTERACTION · 05',
+          stats: [['指令队列', '6'], ['对时偏差', '3 ms'], ['执行成功率', '100%'], ['最近下发', '12:48:12']],
+          chain: ['EMS 策略', '指令网关', '设备控制器', '执行反馈'],
+          tags: ['调节指令', '模式切换', '时钟同步', '闭环反馈']
+        },
+        quality: {
+          kicker: '互动 / INTERACTION · 06',
+          stats: [['谐波 THD', '2.1%'], ['电压偏差', '+0.4%'], ['频率偏差', '0.01 Hz'], ['合格率', '99.6%']],
+          chain: ['电能质量监测仪', '边缘计算', '质量告警', '运行评估'],
+          tags: ['谐波', '电压波动', '闪变', '合规监测']
+        },
+        maintenance: {
+          kicker: '管理 / MANAGEMENT · 07',
+          stats: [['待巡检设备', '3'], ['进行中工单', '1'], ['备件齐套率', '96%'], ['本月完成', '28']],
+          chain: ['设备台账', '巡检计划', '工单系统', '资产管理'],
+          tags: ['巡检', '维修', '保养计划', '备件']
+        },
+        alarm: {
+          kicker: '管理 / MANAGEMENT · 08',
+          stats: [['当前告警', '2'], ['今日事件', '16'], ['平均响应', '42 s'], ['已闭环', '14']],
+          chain: ['设备告警', '事件中心', '分级通知', '故障追溯'],
+          tags: ['故障告警', '越限事件', '响应机制', '追溯']
+        },
+        settlement: {
+          kicker: '管理 / MANAGEMENT · 09',
+          stats: [['今日用电量', '3,165 kWh'], ['功率因数', '0.96'], ['今日电费', '¥ 1,284'], ['结算周期', '月度']],
+          chain: ['智能电表', '计量采集', '电量分摊', '结算中心'],
+          tags: ['分时电量', '功率因数', '电费', '能效考核']
+        }
+      };
+
+      const FEATURE_DETAILS = {
+        'generation-forecast': {
+          kicker: '能量管理 / FORECAST',
+          stats: [['明日预测电量', '1,920 kWh'], ['预测置信度', '92%'], ['更新周期', '15 min'], ['预测偏差', '4.8%']],
+          chain: ['气象数据', '历史出力模型', '功率预测', '发电计划'],
+          tags: ['气象驱动', '超短期预测', '风光出力'],
+          note: '预测结果将自动输入发电计划模块，形成“预测—计划”闭环。'
+        },
+        'load-forecast': {
+          kicker: '能量管理 / FORECAST',
+          stats: [['晚高峰预测', '348 kW'], ['峰谷差', '94 kW'], ['平均误差 MAPE', '3.8%'], ['更新周期', '15 min']],
+          chain: ['用户行为', '历史负荷', '场景特征', '用电预测'],
+          tags: ['负荷峰谷', '场景识别', '资源优化'],
+          note: '负荷预测用于提前规避供电缺口，减少资源浪费。'
+        },
+        'generation-plan': {
+          kicker: '能量管理 / PLAN',
+          stats: [['计划电量', '4,200 kWh'], ['计划时段', '24 h'], ['执行偏差', '2.1%'], ['计划发布', '18:00']],
+          chain: ['发电预测', '负荷预测', '多时段计划', '运行约束校验'],
+          tags: ['多时段方案', '供需平衡', '经济性', '稳定性'],
+          note: '多时段发电方案在平衡供需关系的同时，兼顾微电网运行的经济性与稳定性。'
+        },
+        'source-management': {
+          kicker: '能量管理 / CONTROL',
+          stats: [['储能可调容量', '160 kW'], ['柴发备用', '120 kW'], ['并网交换', '82 kW'], ['协同状态', '正常']],
+          chain: ['储能 SOC', '柴发状态', '并网功率', '多源协同'],
+          tags: ['储能', '柴油发电机', '多源协同', '充放电策略'],
+          note: '多源电源协同运行，优化充放电策略，提升供电可靠性。'
+        },
+        analytics: {
+          kicker: '能量管理 / EVALUATION',
+          stats: [['综合能效评分', '91'], ['设备健康度', '94%'], ['异常识别', '2'], ['报告周期', '日 / 月']],
+          chain: ['运行数据', '能效指标', '设备状态', '分析报告'],
+          tags: ['多维分析', '能效评估', '运维决策', '系统升级'],
+          note: '多维度分析运行数据，为运维决策和系统升级提供支撑。'
+        },
+        optimization: {
+          kicker: '能量管理 / OPTIMIZE',
+          stats: [['节能贡献', '6.8%'], ['碳减排', '2.1 t'], ['自平衡率', '68%'], ['调节周期', '15 min']],
+          chain: ['实时数据', '动态优化', '能源分配', '削峰填谷'],
+          tags: ['削峰填谷', '节能减排', '经济效益', '动态调整'],
+          note: '基于实时数据动态调整能源分配，实现削峰填谷与节能减排。'
+        }
+      };
+
+      const LAYER_DETAILS = {
+        field: {
+          kicker: '层级 / 01 · FIELD CONTROL',
+          stats: [['控制响应', '< 10 ms'], ['现场设备', '24'], ['采集周期', '1 s'], ['控制模式', '就地自治']],
+          chain: ['设备感知', '边缘采集', '就地控制', '状态上送'],
+          tags: ['实时采集', '状态监测', '毫秒级控制', '物理基础'],
+          note: '就地控制层是保障系统稳定运行的物理基础，强调快速、可靠的本地执行。'
+        },
+        supervision: {
+          kicker: '层级 / 02 · SUPERVISION',
+          stats: [['接入节点', '24'], ['数据点', '1,286'], ['告警准确率', '98.2%'], ['远程指令', '在线']],
+          chain: ['就地数据', '区域汇聚', '集中监控', '指令下发'],
+          tags: ['核心枢纽', '可视化监控', '异常告警', '远程指令'],
+          note: '监控层汇聚全区域实时数据，确保运行状态可知、异常可控、指令可达。'
+        },
+        energy: {
+          kicker: '层级 / 03 · ENERGY MANAGEMENT',
+          stats: [['优化周期', '15 min'], ['预测模型', '4 个'], ['策略评估', '实时'], ['算法能力', '全局优化']],
+          chain: ['全量数据', '算法模型', '全局优化', '能源调度'],
+          tags: ['智慧大脑', '大数据', '算法模型', '全局优化'],
+          note: '能量管理层以数据和算法为核心，统筹能源调度策略，实现经济高效运行。'
+        }
+      };
+
+      /* ------------------------------------------------------------
+         Drawer
+         ------------------------------------------------------------ */
+      const drawer = $('#drawer');
+      const backdrop = $('#drawerBackdrop');
+      const drawerKicker = $('#drawerKicker');
+      const drawerTitle = $('#drawerTitle');
+      const drawerDesc = $('#drawerDesc');
+      const drawerStats = $('#drawerStats');
+      const drawerChain = $('#drawerChain');
+      const drawerTags = $('#drawerTags');
+      let lastFocused = null;
+
+      function fillDrawer({ kicker, title, desc, stats, chain, tags, note }) {
+        drawerKicker.textContent = kicker;
+        drawerTitle.textContent = title;
+        drawerDesc.textContent = desc;
+        drawerStats.innerHTML = stats.map(([label, value]) => `<div class="drawer-stat"><span>${label}</span><strong>${value}</strong></div>`).join('');
+        drawerChain.innerHTML = chain.map((step) => `<div class="chain-step"><span class="chain-dot"></span><span>${step}</span></div>`).join('');
+        drawerTags.innerHTML = tags.map((tag) => `<span>${tag}</span>`).join('');
+        const noteEl = drawer.querySelector('.drawer-note');
+        if (note) noteEl.textContent = note;
+      }
+
+      function openDataDrawer(card) {
+        const detail = DATA_DETAILS[card.dataset.id];
+        const group = card.closest('.data-column')?.dataset.group || 'resource';
+        const groupName = { resource: '资源', interaction: '互动', management: '管理' }[group] || '资源';
+        fillDrawer({
+          kicker: `${groupName} / ${detail ? detail.kicker.split('/')[1]?.trim() : 'DATA'}`,
+          title: $('h3', card).textContent,
+          desc: $('.data-desc', card).textContent,
+          stats: detail.stats,
+          chain: detail.chain,
+          tags: detail.tags,
+          note: '该视图用于展示微电网通信组网数据与能量管理界面的联动关系，指标为课堂演示数据。'
+        });
+        drawer.querySelector('.drawer-cta').innerHTML = '前往数据资源矩阵 <svg class="icon icon-sm"><use href="#i-arrow"></use></svg>';
+        openDrawer();
+      }
+
+      function openFeatureDrawer(card) {
+        const detail = FEATURE_DETAILS[card.dataset.id];
+        fillDrawer({
+          kicker: detail.kicker,
+          title: $('h3', card).textContent,
+          desc: $('.function-desc', card).textContent,
+          stats: detail.stats,
+          chain: detail.chain,
+          tags: detail.tags,
+          note: detail.note
+        });
+        drawer.querySelector('.drawer-cta').innerHTML = '查看关联数据 <svg class="icon icon-sm"><use href="#i-arrow"></use></svg>';
+        openDrawer();
+      }
+
+      function openLayerDrawer(card) {
+        const detail = LAYER_DETAILS[card.dataset.id];
+        fillDrawer({
+          kicker: detail.kicker,
+          title: $('h3', card).textContent,
+          desc: $('p', card).textContent,
+          stats: detail.stats,
+          chain: detail.chain,
+          tags: detail.tags,
+          note: detail.note
+        });
+        drawer.querySelector('.drawer-cta').innerHTML = '查看数据资源矩阵 <svg class="icon icon-sm"><use href="#i-arrow"></use></svg>';
+        openDrawer();
+      }
+
+      function openDrawer() {
+        lastFocused = document.activeElement;
+        backdrop.classList.add('is-open');
+        drawer.classList.add('is-open');
+        drawer.setAttribute('aria-hidden', 'false');
+        backdrop.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('drawer-open');
+        window.setTimeout(() => $('#drawerClose').focus({ preventScroll: true }), 60);
+      }
+      function closeDrawer() {
+        backdrop.classList.remove('is-open');
+        drawer.classList.remove('is-open');
+        drawer.setAttribute('aria-hidden', 'true');
+        backdrop.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('drawer-open');
+        if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus({ preventScroll: true });
+      }
+      $('#drawerClose').addEventListener('click', closeDrawer);
+      backdrop.addEventListener('click', closeDrawer);
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && drawer.classList.contains('is-open')) closeDrawer();
+      });
+      $('#drawerCta').addEventListener('click', () => {
+        closeDrawer();
+        document.getElementById('data-matrix').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+
+      $$('.function-card').forEach((card) => {
+        card.addEventListener('click', () => openFeatureDrawer(card));
+        card.addEventListener('keydown', (event) => {
+          if (!['Enter', ' '].includes(event.key)) return;
+          event.preventDefault();
+          openFeatureDrawer(card);
+        });
+      });
+      $$('.layer-card').forEach((card) => {
+        card.addEventListener('click', () => openLayerDrawer(card));
+        card.addEventListener('keydown', (event) => {
+          if (!['Enter', ' '].includes(event.key)) return;
+          event.preventDefault();
+          openLayerDrawer(card);
+        });
+      });
+
+      /* ------------------------------------------------------------
+         Notifications
+         ------------------------------------------------------------ */
+      const notifyButton = $('#notifyButton');
+      const notifyPop = $('#notificationPop');
+      notifyButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        notifyPop.classList.toggle('is-open');
+      });
+      document.addEventListener('click', (event) => {
+        if (!notifyPop.contains(event.target) && !notifyButton.contains(event.target)) notifyPop.classList.remove('is-open');
+      });
+
+      /* ------------------------------------------------------------
+         Export snapshot
+         ------------------------------------------------------------ */
+      $('#exportButton').addEventListener('click', () => {
+        const content = [
+          '微电网能源管理系统 · 运行快照',
+          `生成时间：${new Date().toLocaleString('zh-CN')}`,
+          '',
+          `总有功负荷：${kpiLoad.textContent} kW`,
+          `清洁能源占比：${kpiClean.textContent}%`,
+          `储能 SOC：${kpiSoc.textContent}%`,
+          `通信在线率：${$('#kpiOnline').textContent}%`,
+          '',
+          '通信数据资源矩阵：资源 3 类 / 互动 3 类 / 管理 3 类',
+          '能量管理层：发电预测、负荷预测、发电计划、电源管理、统计分析与评估、优化调度',
+          '',
+          '课程设计：孙元凯 · 202410132083 · 24新能源科学与工程3班'
+        ].join('\n');
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `EMS-运行快照-${new Date().toISOString().slice(0, 10)}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(link.href), 1500);
+        showToast('运行快照已生成', '包含当前能源指标与系统内容摘要。');
+      });
+
+      /* ------------------------------------------------------------
+         Toast
+         ------------------------------------------------------------ */
+      const toastStack = $('#toastStack');
+      function showToast(title, message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = '<span class="toast-icon"><svg class="icon"><use href="#i-check"></use></svg></span><div><strong></strong><p></p></div>';
+        $('strong', toast).textContent = title;
+        $('p', toast).textContent = message;
+        toastStack.appendChild(toast);
+        window.setTimeout(() => {
+          toast.classList.add('is-leaving');
+          window.setTimeout(() => toast.remove(), 260);
+        }, 3400);
+      }
+
+      /* ------------------------------------------------------------
+         Mobile navigation (jump menu)
+         ------------------------------------------------------------ */
+      $('#mobileMenu').addEventListener('click', () => {
+        const target = $('#data-matrix');
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+
+      applyFilter();
+      resizeCanvas();
+      window.setTimeout(resizeCanvas, 300);
+      window.addEventListener('load', resizeCanvas);
+    })();
+  </script>
+</body>
+</html>
